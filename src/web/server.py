@@ -65,6 +65,8 @@ def _build_fbc_urls(fbc_image, gitlab_fbc_project=GITLAB_FBC_PROJECT):
     fbc_quay_url = ''
     fbc_konflux_url = ''
     fbc_gitlab_url = ''
+    snap_name = None
+    _iib_empty = {'iib_id': '', 'iib_digest_short': '', 'iib_url': '', 'iib_log_url': '', 'iib_resolved': ''}
     if not fbc_image:
         return {
             'fbc_image_short': '',
@@ -72,6 +74,8 @@ def _build_fbc_urls(fbc_image, gitlab_fbc_project=GITLAB_FBC_PROJECT):
             'fbc_quay_url': '',
             'fbc_konflux_url': '',
             'fbc_gitlab_url': '',
+            'snapshot_name': '',
+            **_iib_empty,
         }
     if 'quay.io/' in fbc_image:
         repo_path = fbc_image.split('quay.io/')[-1].split('@')[0].split(':')[0]
@@ -84,7 +88,10 @@ def _build_fbc_urls(fbc_image, gitlab_fbc_project=GITLAB_FBC_PROJECT):
             'fbc_quay_url': '',
             'fbc_konflux_url': '',
             'fbc_gitlab_url': '',
+            'snapshot_name': '',
+            **_iib_empty,
         }
+    app_name = ''
     if repo_path:
         fbc_tag_url = f"https://quay.io/repository/{repo_path}?tab=tags"
         if '@' in fbc_image:
@@ -92,7 +99,7 @@ def _build_fbc_urls(fbc_image, gitlab_fbc_project=GITLAB_FBC_PROJECT):
             fbc_quay_url = f"https://quay.io/repository/{repo_path}/manifest/{digest}"
         elif ':' in fbc_image:
             tag = fbc_image.split(':')[-1]
-            fbc_quay_url = f"https://quay.io/repository/{repo_path}/tag/{tag}"
+            fbc_quay_url = f"https://quay.io/repository/{repo_path}?tab=tags&tag={tag}"
         else:
             fbc_quay_url = fbc_tag_url
         parts = repo_path.split('/')
@@ -104,15 +111,23 @@ def _build_fbc_urls(fbc_image, gitlab_fbc_project=GITLAB_FBC_PROJECT):
             commit_sha = fbc_image.split(':')[-1]
             if _FBC_SHA_RE.fullmatch(commit_sha):
                 fbc_gitlab_url = f"https://gitlab.cee.redhat.com/{gitlab_fbc_project}/-/commit/{commit_sha}"
-                snap_name, snap_app = _resolve_konflux_snapshot(commit_sha)
+                snap_name, snap_app = _resolve_konflux_snapshot(commit_sha, expected_app=app_name or None)
                 if snap_name and snap_app:
                     fbc_konflux_url = f"{KONFLUX_UI}/ns/{KONFLUX_NAMESPACE}/applications/{snap_app}/snapshots/{snap_name}"
+    snapshot_name = snap_name or ''
+    iib_data = _iib_empty
+    if app_name and '@' not in fbc_image and ':' in fbc_image:
+        sha = fbc_image.split(':')[-1]
+        if _FBC_SHA_RE.fullmatch(sha):
+            iib_data = _resolve_konflux_release(sha, app_name=app_name)
     return {
         'fbc_image_short': _fbc_short(fbc_image),
         'fbc_image_url': fbc_tag_url,
         'fbc_quay_url': fbc_quay_url,
         'fbc_konflux_url': fbc_konflux_url,
         'fbc_gitlab_url': fbc_gitlab_url,
+        'snapshot_name': snapshot_name,
+        **iib_data,
     }
 
 
@@ -123,17 +138,65 @@ KONFLUX_NAMESPACE = "rhwa-tenant"
 KONFLUX_UI = "https://konflux-ui.apps.stone-prod-p02.hjvn.p1.openshiftapps.com"
 _konflux_token = os.environ.get("KONFLUX_TOKEN", "")
 _snapshot_cache = {}
+_recent_snapshots_cache = {}
+_recent_snapshots_ts = 0
 
 
-def _resolve_konflux_snapshot(commit_sha):
+def _list_recent_snapshots(app_name, limit=5):
+    """List recent Konflux Snapshots for an application."""
+    import time as _time
+    global _recent_snapshots_ts
+    cache_key = app_name
+    now = _time.time()
+    if cache_key in _recent_snapshots_cache and (now - _recent_snapshots_ts) < 300:
+        return _recent_snapshots_cache[cache_key]
+    if not _konflux_token or not app_name:
+        return []
+    selector = f"appstudio.openshift.io/application={app_name}"
+    url = (f"{KONFLUX_API}/apis/appstudio.redhat.com/v1alpha1"
+           f"/namespaces/{KONFLUX_NAMESPACE}/snapshots"
+           f"?labelSelector={urllib.parse.quote(selector, safe='=,')}"
+           f"&limit={limit}")
+    req = urllib.request.Request(url, headers={
+        "Authorization": f"Bearer {_konflux_token}",
+        "Accept": "application/json",
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read())
+        results = []
+        for item in data.get("items", []):
+            labels = item.get("metadata", {}).get("labels", {})
+            sha = labels.get("pac.test.appstudio.openshift.io/sha", "")
+            name = item.get("metadata", {}).get("name", "")
+            created = item.get("metadata", {}).get("creationTimestamp", "")
+            if sha and name:
+                results.append({
+                    'snapshot_name': name,
+                    'commit_sha': sha,
+                    'created': created,
+                    'app_name': app_name,
+                })
+        _recent_snapshots_cache[cache_key] = results
+        _recent_snapshots_ts = now
+        return results
+    except Exception as exc:
+        logger.warning("Konflux snapshot list failed for %s: %s", app_name, exc)
+    return []
+
+
+def _resolve_konflux_snapshot(commit_sha, expected_app=None):
     """Look up a Konflux Snapshot name by FBC commit SHA.
 
+    When expected_app is provided (e.g. 'rhwa-fbc-422'), filters results
+    to match the correct OCP version application.
     Returns (snapshot_name, app_name) or (None, None).
     """
     if not _konflux_token or not commit_sha:
         return None, None
-    if commit_sha in _snapshot_cache:
-        return _snapshot_cache[commit_sha]
+    cache_key = (commit_sha, expected_app or '')
+    if cache_key in _snapshot_cache:
+        return _snapshot_cache[cache_key]
     label = f"pac.test.appstudio.openshift.io/sha={commit_sha}"
     url = (f"{KONFLUX_API}/apis/appstudio.redhat.com/v1alpha1"
            f"/namespaces/{KONFLUX_NAMESPACE}/snapshots"
@@ -146,16 +209,89 @@ def _resolve_konflux_snapshot(commit_sha):
         with urllib.request.urlopen(req, timeout=10) as resp:
             data = json.loads(resp.read())
         items = data.get("items", [])
+        if items and expected_app:
+            items = [i for i in items
+                     if i.get("metadata", {}).get("labels", {}).get(
+                         "appstudio.openshift.io/application", "") == expected_app]
         if items:
             snap = items[0]["metadata"]["name"]
             app = items[0].get("metadata", {}).get("labels", {}).get(
                 "appstudio.openshift.io/application", "")
-            _snapshot_cache[commit_sha] = (snap, app)
+            _snapshot_cache[cache_key] = (snap, app)
             return snap, app
     except Exception as exc:
         logger.warning("Konflux snapshot lookup failed for %s: %s", commit_sha[:8], exc)
-    _snapshot_cache[commit_sha] = (None, None)
+    _snapshot_cache[cache_key] = (None, None)
     return None, None
+
+
+_release_cache = {}
+
+
+def _resolve_konflux_release(commit_sha, app_name=None):
+    """Look up IIB build ID and digest from a Konflux Release by FBC commit SHA.
+
+    Returns dict with iib_id, iib_digest_short, iib_url, iib_log_url (all strings).
+    """
+    cache_key = (commit_sha, app_name or '')
+    if cache_key in _release_cache:
+        return _release_cache[cache_key]
+    empty = {'iib_id': '', 'iib_digest_short': '', 'iib_url': '', 'iib_log_url': '', 'iib_resolved': ''}
+    if not _konflux_token or not commit_sha:
+        _release_cache[cache_key] = empty
+        return empty
+    selector = f"pac.test.appstudio.openshift.io/sha={commit_sha}"
+    if app_name:
+        selector += f",appstudio.openshift.io/application={app_name}"
+    url = (f"{KONFLUX_API}/apis/appstudio.redhat.com/v1alpha1"
+           f"/namespaces/{KONFLUX_NAMESPACE}/releases"
+           f"?labelSelector={urllib.parse.quote(selector, safe='=,')}")
+    req = urllib.request.Request(url, headers={
+        "Authorization": f"Bearer {_konflux_token}",
+        "Accept": "application/json",
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read())
+        items = data.get("items", [])
+        if not items:
+            _release_cache[cache_key] = empty
+            return empty
+        artifacts = items[0].get("status", {}).get("artifacts", {})
+        idx_map = artifacts.get("index_image", {})
+        idx_entry = None
+        for ver_key, ver_val in idx_map.items():
+            idx_entry = ver_val
+            break
+        if not idx_entry:
+            comps = artifacts.get("components", [])
+            if comps:
+                idx_entry = comps[0]
+        release_name = items[0].get("metadata", {}).get("name", "")
+        release_app = items[0].get("metadata", {}).get("labels", {}).get(
+            "appstudio.openshift.io/application", app_name or "")
+        if idx_entry:
+            iib_ref = idx_entry.get("index_image", "")
+            iib_resolved = idx_entry.get("index_image_resolved", "")
+            iib_id = iib_ref.split(":")[-1] if ":" in iib_ref else ""
+            digest = iib_resolved.split("@")[-1] if "@" in iib_resolved else ""
+            log_url = ""
+            if release_name and release_app:
+                log_url = (f"{KONFLUX_UI}/ns/{KONFLUX_NAMESPACE}/applications"
+                           f"/{release_app}/releases/{release_name}/artifacts")
+            result = {
+                'iib_id': iib_id,
+                'iib_digest_short': digest[:16] if digest else '',
+                'iib_url': iib_ref,
+                'iib_log_url': log_url,
+                'iib_resolved': iib_resolved,
+            }
+            _release_cache[cache_key] = result
+            return result
+    except Exception as exc:
+        logger.warning("Konflux release lookup failed for %s: %s", commit_sha[:8], exc)
+    _release_cache[cache_key] = empty
+    return empty
 
 
 def _parse_fbc_overrides(data):
@@ -455,14 +591,16 @@ def create_app(db_path: str, config: dict = None, config_file: str = 'config.yam
     if config:
         app.config.update(config)
 
-    # Load tracking config for blocklist
+    # Load tracking config for blocklist and job schedules
     blocklist = []
+    job_schedules = {}
     try:
         with open(config_file, 'r') as f:
             yaml_config = yaml.safe_load(f)
             blocklist = yaml_config.get('tracking', {}).get('blocklist', [])
+            job_schedules = yaml_config.get('collector', {}).get('prow_gcs', {}).get('job_schedules', {})
     except Exception as e:
-        print(f"Warning: Could not load blocklist from config: {e}")
+        print(f"Warning: Could not load config: {e}")
 
     # Initialize database and calculator
     db = DashboardDatabase(db_path)
@@ -828,6 +966,26 @@ def create_app(db_path: str, config: dict = None, config_file: str = 'config.yam
                 'build_id': build_id,
                 'prow_url': f"https://prow.ci.openshift.org/view/gs/test-platform-results/logs/{job_name}/{build_id}" if job_name and build_id else '',
                 'e2e_log_url': urls.get('e2e_log_url', ''),
+                'install_log_url': urls.get('install_log_url', ''),
+                'subscribe_log_url': urls.get('subscribe_log_url', ''),
+                'catalog_log_url': urls.get('catalog_log_url', ''),
+                'artifacts_url': urls.get('artifacts_url', ''),
+                'build_log_url': urls.get('build_log_url', ''),
+                'ocp_version': row.get('ocp_version') or '',
+                'version': row.get('version') or '',
+                'platform': row.get('platform') or '',
+                'csv_version': row.get('csv_version') or '',
+                'fbc_image': fbc_image,
+                'fbc_image_short': entry.get('fbc_image_short', ''),
+                'fbc_quay_url': entry.get('fbc_quay_url', ''),
+                'fbc_konflux_url': entry.get('fbc_konflux_url', ''),
+                'fbc_gitlab_url': entry.get('fbc_gitlab_url', ''),
+                'iib_id': entry.get('iib_id', ''),
+                'iib_digest_short': entry.get('iib_digest_short', ''),
+                'iib_url': entry.get('iib_url', ''),
+                'iib_log_url': entry.get('iib_log_url', ''),
+                'iib_resolved': entry.get('iib_resolved', ''),
+                'snapshot_name': entry.get('snapshot_name', ''),
                 'failure_category': row.get('failure_category') or '',
             }
 
@@ -849,6 +1007,12 @@ def create_app(db_path: str, config: dict = None, config_file: str = 'config.yam
                 'fbc_quay_url': e.get('fbc_quay_url', ''),
                 'fbc_konflux_url': e.get('fbc_konflux_url', ''),
                 'fbc_gitlab_url': e.get('fbc_gitlab_url', ''),
+                'iib_id': e.get('iib_id', ''),
+                'iib_digest_short': e.get('iib_digest_short', ''),
+                'iib_url': e.get('iib_url', ''),
+                'iib_log_url': e.get('iib_log_url', ''),
+                'iib_resolved': e.get('iib_resolved', ''),
+                'snapshot_name': e.get('snapshot_name', ''),
                 'latest_date': (e['latest_date'] or '').split('T')[0],
                 'passed': passed,
                 'failed': failed,
@@ -857,11 +1021,68 @@ def create_app(db_path: str, config: dict = None, config_file: str = 'config.yam
                 'operators': e['operators'],
             })
 
+        existing_shas = set()
+        for s in summaries:
+            if s.get('fbc_full'):
+                existing_shas.add(s['fbc_full'][:7])
+        seen_apps = set()
+        for e in fbc_map.values():
+            repo = (e.get('fbc_quay_url') or '').split('/')
+            for part in repo:
+                if part.startswith('rhwa-fbc-'):
+                    seen_apps.add(part)
+        for app_name in (seen_apps or {'rhwa-fbc-422'}):
+            recent = _list_recent_snapshots(app_name, limit=5)
+            for snap in recent:
+                short = snap['commit_sha'][:7]
+                if short not in existing_shas:
+                    existing_shas.add(short)
+                    fbc_urls = _build_fbc_urls(
+                        f"quay.io/redhat-user-workloads/rhwa-tenant/rhwa-fbc/{app_name}:{snap['commit_sha']}")
+                    summaries.append({
+                        'fbc_short': short,
+                        'fbc_full': snap['commit_sha'],
+                        'fbc_quay_url': fbc_urls.get('fbc_quay_url', ''),
+                        'fbc_konflux_url': fbc_urls.get('fbc_konflux_url', ''),
+                        'fbc_gitlab_url': fbc_urls.get('fbc_gitlab_url', ''),
+                        'iib_id': fbc_urls.get('iib_id', ''),
+                        'iib_digest_short': fbc_urls.get('iib_digest_short', ''),
+                        'iib_url': fbc_urls.get('iib_url', ''),
+                        'iib_log_url': fbc_urls.get('iib_log_url', ''),
+                        'iib_resolved': fbc_urls.get('iib_resolved', ''),
+                        'snapshot_name': fbc_urls.get('snapshot_name', '') or snap['snapshot_name'],
+                        'latest_date': snap['created'].split('T')[0],
+                        'passed': 0, 'failed': 0, 'total': 0,
+                        'not_run': len(all_ops),
+                        'operators': {},
+                        'has_runs': False,
+                    })
+
+        sched_data = {}
+        for key, sched in job_schedules.items():
+            sched_data[key] = {
+                'label': sched.get('label', key),
+                'variant': sched.get('variant', ''),
+                'day': sched.get('day', ''),
+            }
+
         return jsonify({
             'fbc_summaries': summaries,
             'all_operators': all_ops,
             'all_jobs': all_jobs,
+            'job_schedules': sched_data,
         })
+
+    @app.route('/api/job-schedules')
+    def api_job_schedules():
+        sched_data = {}
+        for key, sched in job_schedules.items():
+            sched_data[key] = {
+                'label': sched.get('label', key),
+                'variant': sched.get('variant', ''),
+                'day': sched.get('day', ''),
+            }
+        return jsonify({'job_schedules': sched_data})
 
     @app.route('/api/presubmit-results')
     def api_presubmit_results():

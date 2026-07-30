@@ -816,9 +816,13 @@
                     <p class="subtitle">medik8s QE - OpenShift CI Test Results</p>
                 </div>
                 <div class="header-actions">
-                    <a href="https://github.com/medik8s/ci-dashboard" target="_blank" rel="noopener noreferrer" title="View source on GitHub" class="github-link">
+                    <a href="https://github.com/medik8s/ci-dashboard" target="_blank" rel="noopener noreferrer" title="CI Dashboard source code" class="github-link">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
-                        GitHub
+                        Dashboard
+                    </a>
+                    <a href="https://github.com/medik8s/system-tests" target="_blank" rel="noopener noreferrer" title="E2E test source code (system-tests)" class="github-link">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+                        Tests
                     </a>
                     <span class="header-sync" id="headerLastSync">Last sync: checking...</span>
                     <button class="refresh-button" id="headerRefreshBtn" onclick="triggerCollection()" title="Collect latest test results from Prow">
@@ -838,6 +842,7 @@
                 <button class="tab-button" role="tab" aria-selected="false" onclick="showTab('job-runs')">Job Runs</button>
                 <button class="tab-button" role="tab" aria-selected="false" onclick="showTab('fbc-validation')">FBC Summary</button>
                 <button class="tab-button" role="tab" aria-selected="false" onclick="showTab('weekly-report')">Weekly Report</button>
+                <button class="tab-button" role="tab" aria-selected="false" onclick="showTab('pipeline')">Pipeline</button>
             </div>
         </header>
 
@@ -1003,9 +1008,9 @@
                     </div>
                 </div>
                 <div style="display:flex; align-items:center; gap:6px;">
-                    <label style="font-size:0.75rem; color:var(--text-muted); white-space:nowrap;">FBC SHA:</label>
-                    <input id="fbcShaInput" type="text" maxlength="40" placeholder="latest" pattern="[0-9a-fA-F]{7,40}" style="width:90px; padding:2px 6px; border-radius:4px; border:1px solid var(--border); background:var(--bg-surface); color:var(--text-primary); font-size:0.75rem; font-family:monospace;" title="7-40 char hex commit SHA from {{ gitlab_fbc_project }} GitLab repo">
-                    <span style="font-size:0.65rem; color:var(--text-muted); white-space:nowrap;">7-40 hex chars, e.g. <code style="font-size:0.65rem; color:var(--accent-purple);">69993f6</code></span>
+                    <label style="font-size:0.75rem; color:var(--text-muted); white-space:nowrap;">Snapshot or SHA:</label>
+                    <input id="fbcShaInput" type="text" maxlength="64" placeholder="e.g. rhwa-fbc-422-20260730... or 831c2ada" style="width:200px; padding:3px 6px; border-radius:4px; border:1px solid var(--border); background:var(--bg-surface); color:var(--text-primary); font-size:0.75rem; font-family:monospace;" title="Enter a snapshot name, IIB build ID (numeric), or FBC commit SHA (hex). The dashboard will find the matching FBC entry.">
+                    <button onclick="loadFbcData()" style="padding:3px 10px;border-radius:4px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);cursor:pointer;font-size:0.75rem;">Go</button>
                 </div>
                 <span id="triggerStatus" style="font-size:0.8rem;"></span>
             </div>
@@ -1016,6 +1021,10 @@
                 </div>
                 <div id="recentTriggersList" style="font-size:0.8rem; max-height:300px; overflow-y:auto;"></div>
             </div>
+            <details style="margin-bottom:12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-card);padding:0;">
+                <summary style="cursor:pointer;padding:10px 16px;font-weight:600;font-size:0.9rem;color:var(--text-primary);">Periodic Job Schedule</summary>
+                <div id="jobScheduleTable" style="padding:0 16px 12px;font-size:0.8rem;"></div>
+            </details>
             <div class="test-list">
                 <h2>Job Run History</h2>
                 <table style="table-layout:fixed;width:100%;">
@@ -1045,20 +1054,20 @@
                 <h2>FBC Summary</h2>
                 <div class="controls" style="display:flex; align-items:center; gap:12px; margin-bottom:12px; flex-wrap:wrap;">
                     <div style="display:flex; align-items:center; gap:6px;">
-                        <label style="font-size:0.8rem; color:var(--text-muted);">FBC Commit:</label>
+                        <label style="font-size:0.8rem; color:var(--text-muted);">FBC Snapshot:</label>
                         <select id="fbcSelector" style="padding:4px 8px; border-radius:4px; border:1px solid var(--border); background:var(--bg-surface); color:var(--text-primary); font-size:0.8rem; font-family:monospace; min-width:140px;">
                             <option value="">Loading...</option>
                         </select>
                     </div>
                     <div style="display:flex; align-items:center; gap:6px;">
-                        <label style="font-size:0.75rem; color:var(--text-muted);">or paste SHA:</label>
-                        <input id="fbcLookupInput" type="text" maxlength="40" placeholder="7-40 hex" pattern="[0-9a-fA-F]{7,40}" style="width:100px; padding:3px 6px; border-radius:4px; border:1px solid var(--border); background:var(--bg-surface); color:var(--text-primary); font-size:0.75rem; font-family:monospace;">
+                        <label style="font-size:0.75rem; color:var(--text-muted);">Snapshot or SHA:</label>
+                        <input id="fbcLookupInput" type="text" maxlength="40" placeholder="e.g. rhwa-fbc-422-20260730... or 831c2ada" style="width:200px; padding:3px 6px; border-radius:4px; border:1px solid var(--border); background:var(--bg-surface); color:var(--text-primary); font-size:0.75rem; font-family:monospace;" title="Enter a snapshot name, IIB build ID (numeric), or FBC commit SHA (hex). The dashboard will find the matching FBC entry.">
                         <button onclick="lookupFbc()" style="padding:3px 10px; border-radius:4px; border:1px solid var(--border); background:transparent; color:var(--text-muted); cursor:pointer; font-size:0.75rem;">Go</button>
                     </div>
                     <span id="fbcValStatus" style="font-size:0.75rem; color:var(--text-muted);"></span>
                 </div>
                 <div id="fbcValidationContent">
-                    <div style="text-align:center; padding:40px; color:var(--text-muted);">Select an FBC commit to view validation results</div>
+                    <div style="text-align:center; padding:40px; color:var(--text-muted);">Select an FBC snapshot to view results</div>
                 </div>
             </div>
         </div>
@@ -1150,6 +1159,396 @@
                         <tbody id="topFailingTests">
                             <tr><td colspan="6" style="text-align: center; padding: 20px; color: var(--text-muted);">Loading...</td></tr>
                         </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pipeline Tab -->
+        <div id="pipeline-tab" class="tab-content">
+            <style>
+                .pipe-card { background:var(--bg-card);border-radius:8px;padding:12px 16px;min-width:180px;max-width:260px;text-align:center;cursor:help;transition:box-shadow 0.2s; }
+                .pipe-card:hover { box-shadow:0 0 12px rgba(100,150,255,0.3); }
+                .pipe-card .pc-icon { font-size:1.1rem; }
+                .pipe-card .pc-title { font-weight:700;font-size:0.82rem;margin-top:2px; }
+                .pipe-card .pc-sub { font-size:0.72rem;color:var(--text-muted);margin-top:3px; }
+                .pipe-card .pc-detail { font-size:0.68rem;color:var(--text-secondary);margin-top:3px;line-height:1.3; }
+                .pipe-diagram-wrap { overflow-x:auto;overflow-y:hidden;padding-bottom:8px; }
+                .pipe-diagram { display:flex;align-items:center;gap:100px;min-width:3200px;padding:40px 30px;position:relative; }
+                .pipe-phase { display:flex;flex-direction:column;gap:16px;flex-shrink:0;position:relative;z-index:2; }
+                .pipe-phase-fork { display:flex;flex-direction:column;gap:160px;flex-shrink:0;position:relative;z-index:2; }
+                .pipe-fork-badge { display:inline-block;font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;padding:2px 8px;border-radius:4px;margin-bottom:4px; }
+                .pipe-fork-badge.qe { background:rgba(74,222,128,0.15);color:var(--accent-green);border:1px solid var(--accent-green); }
+                .pipe-fork-badge.rel { background:rgba(248,113,113,0.15);color:var(--accent-red);border:1px solid var(--accent-red); }
+                .pipe-fork-spacer { height:20px; }
+                .pc-links { margin-top:5px;font-size:0.62rem;line-height:1.5; }
+                .pc-links a { color:var(--accent-blue);text-decoration:none; }
+                .pc-links a:hover { text-decoration:underline; }
+                .pipe-section { margin-top:28px;padding:16px;background:var(--bg-surface);border-radius:8px;border:1px solid var(--border); }
+                .pipe-section h3 { font-weight:600;font-size:0.9rem;margin-bottom:10px; }
+                .glossary-term { display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border); }
+                .glossary-term:last-child { border-bottom:none; }
+                .glossary-term dt { font-weight:600;min-width:140px;white-space:nowrap; }
+                .glossary-term dd { font-size:0.85rem;color:var(--text-secondary); }
+                .pipe-arrows-svg { position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;overflow:visible; }
+                .pipe-arrows-svg .edge-group { pointer-events:auto;cursor:help; }
+                .pipe-arrows-svg .edge-group:hover path { stroke-width:3.5; }
+                .pipe-arrows-svg .edge-group:hover text { font-size:11px; }
+                .pipe-arrows-svg path { fill:none;stroke-width:2; }
+                .pipe-arrows-svg path.hit { stroke:transparent;stroke-width:16;pointer-events:stroke; }
+                .pipe-arrows-svg path.main { stroke:var(--text-muted); }
+                .pipe-arrows-svg path.green { stroke:var(--accent-green); }
+                .pipe-arrows-svg path.red { stroke:var(--accent-red); }
+                .pipe-arrows-svg circle.main { fill:var(--text-muted); }
+                .pipe-arrows-svg circle.green { fill:var(--accent-green); }
+                .pipe-arrows-svg circle.red { fill:var(--accent-red); }
+                .pipe-arrows-svg text { font-size:10px;font-weight:600;text-anchor:middle;pointer-events:auto;cursor:pointer; }
+                .pipe-arrows-svg text.main { fill:var(--text-muted); }
+                .pipe-arrows-svg text.green { fill:#4ade80; }
+                .pipe-arrows-svg text.red { fill:#f87171; }
+                .pipe-arrows-svg a text:hover { text-decoration:underline;font-size:11px; }
+            </style>
+            <div style="padding:20px;">
+                <h2 style="margin-bottom:8px;font-size:1.3rem;">FBC Build, Release & Test Pipeline</h2>
+                <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:4px;">How a code change becomes a tested operator catalog. Hover over connecting lines and boxes for details.</p>
+                <p style="color:var(--text-muted);font-size:0.75rem;margin-bottom:20px;">Scroll horizontally to see the full pipeline &#x2192;</p>
+                <div class="pipe-diagram-wrap">
+                <div class="pipe-diagram" id="pipeDiagram">
+                <svg class="pipe-arrows-svg" id="pipeArrowsSvg"></svg>
+
+                <!-- Column 1: Upstream -->
+                <div class="pipe-phase">
+                    <div class="pipe-card" id="pcUpstream" style="border:2px solid #22d3ee;" title="The medik8s project on GitHub is the upstream home for all RHWA operators. Each operator has its own repo with Go source code, tests, and Dockerfiles. When a new version is tagged here, Mintmaker detects it and starts the downstream pipeline.">
+                        <div class="pc-icon"><img src="https://github.githubassets.com/favicons/favicon.svg" alt="GitHub" style="width:20px;height:20px;"></div>
+                        <div class="pc-title" style="color:#22d3ee;"><a href="https://github.com/medik8s" target="_blank" rel="noopener noreferrer" style="color:#22d3ee;">Upstream</a></div>
+                        <div class="pc-sub"><a href="https://github.com/medik8s" target="_blank" rel="noopener noreferrer" style="color:var(--text-muted);">github.com/medik8s</a></div>
+                        <div class="pc-detail" style="white-space:nowrap;">Open-source repos: <a href="https://github.com/medik8s/fence-agents-remediation" target="_blank" rel="noopener noreferrer" style="color:var(--text-secondary);">FAR</a>, <a href="https://github.com/medik8s/storage-based-remediation" target="_blank" rel="noopener noreferrer" style="color:var(--text-secondary);">SBR</a>, <a href="https://github.com/medik8s/self-node-remediation" target="_blank" rel="noopener noreferrer" style="color:var(--text-secondary);">SNR</a>, <a href="https://github.com/medik8s/node-healthcheck-operator" target="_blank" rel="noopener noreferrer" style="color:var(--text-secondary);">NHC</a>, <a href="https://github.com/medik8s/machine-deletion-remediation" target="_blank" rel="noopener noreferrer" style="color:var(--text-secondary);">MDR</a>, <a href="https://github.com/medik8s/node-maintenance-operator" target="_blank" rel="noopener noreferrer" style="color:var(--text-secondary);">NMO</a></div>
+                        <div class="pc-links"><a href="https://github.com/medik8s/fence-agents-remediation/releases/tag/v0.8.0" target="_blank" rel="noopener noreferrer">example: FAR v0.8.0 release</a></div>
+                    </div>
+                </div>
+
+                <!-- Column 2: Downstream -->
+                <div class="pipe-phase">
+                    <div class="pipe-card" id="pcDownstream" style="border:2px solid var(--accent-orange);" title="The Dragonfly team maintains downstream repos on GitLab plus the rhwa-fbc repo that defines the FBC catalog. Mintmaker auto-updates submodule pointers from upstream. When changes merge to main in rhwa-fbc, Konflux builds the catalog image.">
+                        <div class="pc-icon"><img src="https://gitlab.cee.redhat.com/assets/favicon-72a2cad5025aa931d6ea56c3201d1f18e68a8cd39788c7c80d5b2b82aa5143ef.png" alt="GitLab" style="width:20px;height:20px;"></div>
+                        <div class="pc-title" style="color:var(--accent-orange);"><a href="https://gitlab.cee.redhat.com/dragonfly" target="_blank" rel="noopener noreferrer" style="color:var(--accent-orange);">Downstream</a></div>
+                        <div class="pc-sub"><a href="https://gitlab.cee.redhat.com/dragonfly/rhwa-fbc" target="_blank" rel="noopener noreferrer" style="color:var(--text-muted);">dragonfly/rhwa-fbc</a></div>
+                        <div class="pc-detail">FBC catalog definitions, Containerfiles, bundle customizations, Tekton pipeline configs</div>
+                        <div class="pc-links"><a href="https://gitlab.cee.redhat.com/dragonfly/rhwa-fbc/-/commit/831c2ada782c80654f23313b44098e0b8989dedf" target="_blank" rel="noopener noreferrer">example: commit 831c2ad</a></div>
+                    </div>
+                </div>
+
+                <!-- Column 3: Tekton Build -->
+                <div class="pipe-phase">
+                    <div class="pipe-card" id="pcTekton" style="border:2px solid var(--accent-blue);" title="Konflux runs a Tekton pipeline that builds the FBC catalog container image. The build is hermetic (no network access during build) and FIPS-compliant.">
+                        <div class="pc-icon"><img src="https://tekton.dev/favicons/favicon-32x32.png" alt="Tekton" style="width:20px;height:20px;"></div>
+                        <div class="pc-title" style="color:var(--accent-blue);"><a href="https://tekton.dev/" target="_blank" rel="noopener noreferrer" style="color:inherit;">Tekton Build</a></div>
+                        <div class="pc-sub">Hermetic, FIPS-compliant build</div>
+                        <div class="pc-detail">Builds FBC catalog container image</div>
+                        <div class="pc-links"><a href="https://konflux-ui.apps.stone-prod-p02.hjvn.p1.openshiftapps.com/ns/rhwa-tenant/applications/rhwa-fbc-422/pipelineruns?name=rhwa-fbc-422-on-push-831c2ad" target="_blank" rel="noopener noreferrer">example: build for 831c2ad</a></div>
+                    </div>
+                </div>
+
+                <!-- Column 4: Quay Registry -->
+                <div class="pipe-phase">
+                    <div class="pipe-card" id="pcQuay" style="border:2px solid #d84a38;" title="Quay.io is the container registry where the built FBC catalog image is stored. The image path is quay.io/redhat-user-workloads/rhwa-tenant/rhwa-fbc/rhwa-fbc-<ver>:<commit-sha>, where <ver> is the OCP version (e.g., 422, 421, 420). Each image tag is a 40-char git commit SHA.">
+                        <div class="pc-icon"><img src="https://quay.io/static/img/quay_favicon.png" alt="Quay" style="width:20px;height:20px;"></div>
+                        <div class="pc-title" style="color:#d84a38;"><a href="https://quay.io/organization/redhat-user-workloads" target="_blank" rel="noopener noreferrer" style="color:inherit;">Quay Registry</a></div>
+                        <div class="pc-sub">quay.io/.../rhwa-fbc-&lt;ver&gt;:&lt;sha&gt;</div>
+                        <div class="pc-detail">FBC catalog image stored per OCP version</div>
+                        <div class="pc-links"><a href="https://quay.io/repository/redhat-user-workloads/rhwa-tenant/rhwa-fbc/rhwa-fbc-422?tab=tags&tag=831c2ada782c80654f23313b44098e0b8989dedf" target="_blank" rel="noopener noreferrer">example: tag 831c2ad</a></div>
+                    </div>
+                </div>
+
+                <!-- Column 5: Snapshot -->
+                <div class="pipe-phase">
+                    <div class="pipe-card" id="pcSnapshot" style="border:2px solid var(--accent-purple);" title="A Snapshot is a Kubernetes Custom Resource created automatically by Konflux after a successful build. It is an immutable record containing the exact image digest (sha256:...), the source git commit SHA, and build metadata. Triggers both CI and release paths.">
+                        <div class="pc-icon"><img src="https://konflux-ui.apps.stone-prod-p02.hjvn.p1.openshiftapps.com/favicon.ico" alt="Konflux" style="width:20px;height:20px;border-radius:50%;"></div>
+                        <div class="pc-title" style="color:var(--accent-purple);"><a href="https://konflux-ui.apps.stone-prod-p02.hjvn.p1.openshiftapps.com/ns/rhwa-tenant/applications" target="_blank" rel="noopener noreferrer" style="color:inherit;">Snapshot</a></div>
+                        <div class="pc-sub">Immutable build record</div>
+                        <div class="pc-detail">Image digest + source commit. Triggers CI and release paths.</div>
+                        <div class="pc-links"><a href="https://konflux-ui.apps.stone-prod-p02.hjvn.p1.openshiftapps.com/ns/rhwa-tenant/applications/rhwa-fbc-422/snapshots/rhwa-fbc-422-20260730-035530-000" target="_blank" rel="noopener noreferrer">example: snapshot 831c2ad</a> | <a href="https://konflux-ui.apps.stone-prod-p02.hjvn.p1.openshiftapps.com/ns/rhwa-tenant/applications/rhwa-fbc-422/snapshots" target="_blank" rel="noopener noreferrer">all 4.22</a></div>
+                    </div>
+                </div>
+
+                <!-- Column 6: Y-fork (FBC Image + EC Policy) -->
+                <div class="pipe-phase-fork" style="margin-left:40px;">
+                    <div>
+                        <div class="pipe-fork-badge qe">QE CI</div>
+                        <div class="pipe-card" id="pcFbcImage" style="border:2px solid var(--accent-green);" title="The FBC build image is the raw catalog container pushed to Quay by the Tekton build. It contains ONLY the RHWA operator catalog entries (FAR, SBR, SNR, NHC, MDR, NMO). In CI, this image is used directly as a CatalogSource. The image tag is the FBC git commit SHA.">
+                            <div class="pc-icon"><img src="https://quay.io/static/img/quay_favicon.png" alt="Quay" style="width:20px;height:20px;"></div>
+                            <div class="pc-title" style="color:var(--accent-green);"><a href="https://quay.io/organization/redhat-user-workloads" target="_blank" rel="noopener noreferrer" style="color:inherit;">FBC Image</a></div>
+                            <div class="pc-sub">quay.io/.../rhwa-fbc-&lt;ver&gt;:&lt;sha&gt;</div>
+                            <div class="pc-detail">Raw RHWA-only catalog. Used directly in CI testing via CatalogSource.</div>
+                            <div class="pc-links"><a href="https://konflux-ui.apps.stone-prod-p02.hjvn.p1.openshiftapps.com/ns/rhwa-tenant/applications/rhwa-fbc-422/components" target="_blank" rel="noopener noreferrer">example: FBC component</a> | <a href="https://quay.io/repository/redhat-user-workloads/rhwa-tenant/rhwa-fbc/rhwa-fbc-422?tab=tags&tag=831c2ada782c80654f23313b44098e0b8989dedf" target="_blank" rel="noopener noreferrer">Quay tag</a></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="pipe-fork-badge rel">Release</div>
+                        <div class="pipe-card" id="pcEcPolicy" style="border:2px solid var(--accent-red);" title="Enterprise Contract Policy (ECP) checks the built image against policies: image provenance, signatures, SBOM completeness, and FIPS compliance. If validation fails, the release is blocked.">
+                            <div class="pc-icon"><img src="https://konflux-ui.apps.stone-prod-p02.hjvn.p1.openshiftapps.com/favicon.ico" alt="Konflux" style="width:20px;height:20px;border-radius:50%;"></div>
+                            <div class="pc-title" style="color:var(--accent-red);"><a href="https://enterprisecontract.dev/" target="_blank" rel="noopener noreferrer" style="color:inherit;">EC Policy</a></div>
+                            <div class="pc-sub">Validates image provenance, signatures</div>
+                            <div class="pc-detail">SBOM completeness, FIPS compliance. Blocks release on failure.</div>
+                            <div class="pc-links"><a href="https://enterprisecontract.dev/" target="_blank" rel="noopener noreferrer">example: EC policy rules</a></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 7: Prow CI + IIB -->
+                <div class="pipe-phase-fork">
+                    <div>
+                        <div class="pipe-fork-spacer"></div>
+                        <div class="pipe-card" id="pcProwCi" style="border:2px solid var(--accent-green);" title="A fresh OCP cluster is provisioned on AWS using IPI. The medik8s-catalogsource step creates a CatalogSource pointing to the FBC build image. OLM installs the operators via Subscription. Then Ginkgo e2e tests run against the installed operators.">
+                            <div class="pc-icon"><img src="https://prow.ci.openshift.org/static/favicon.ico" alt="Prow" style="width:20px;height:20px;"></div>
+                            <div class="pc-title" style="color:var(--accent-green);"><a href="https://prow.ci.openshift.org/" target="_blank" rel="noopener noreferrer" style="color:inherit;">Prow CI</a></div>
+                            <div class="pc-sub">IPI provision, CatalogSource, OLM Subscribe</div>
+                            <div class="pc-detail">Ginkgo E2E tests on fresh AWS cluster</div>
+                            <div class="pc-links"><a href="https://prow.ci.openshift.org/job-history/gs/test-platform-results/logs/periodic-ci-medik8s-system-tests-main-4.22-konflux-e2e-far-weekly-aws" target="_blank" rel="noopener noreferrer">example: FAR job history</a></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="pipe-fork-spacer"></div>
+                        <div class="pipe-card" id="pcIib" style="border:2px solid var(--accent-red);" title="The Index Image Build (IIB) is the release candidate. It merges the RHWA FBC catalog with the full Red Hat OCP catalog.">
+                            <div class="pc-icon">&#x1F3F7;&#xFE0F;</div>
+                            <div class="pc-title" style="color:var(--accent-red);">Index Image (IIB)</div>
+                            <div class="pc-sub">registry-proxy.../rh-osbs/iib:1187142</div>
+                            <div class="pc-detail">FBC merged with full RH OCP catalog. The release candidate.</div>
+                            <div class="pc-links"><a href="https://konflux-ui.apps.stone-prod-p02.hjvn.p1.openshiftapps.com/ns/rhwa-tenant/applications/rhwa-fbc-422/releases/rhwa-fbc-422-20260730-035530-000-831c2ad-h92vf/artifacts" target="_blank" rel="noopener noreferrer">example: IIB 1187142 artifacts</a> | <a href="https://iib.engineering.redhat.com/api/v1/builds/1187142/logs" target="_blank" rel="noopener noreferrer">IIB log</a></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 8: Test Results + Stage/Prod -->
+                <div class="pipe-phase-fork">
+                    <div>
+                        <div class="pipe-fork-spacer"></div>
+                        <div class="pipe-card" id="pcTestResults" style="border:2px solid var(--accent-green);" title="Test results are uploaded to GCS as Prow artifacts: JUnit XML reports, build logs, must-gather archives. The dashboard collects these daily.">
+                            <div class="pc-icon">&#x1F4CA;</div>
+                            <div class="pc-title" style="color:var(--accent-green);">Test Results</div>
+                            <div class="pc-sub">JUnit XML, build logs, artifacts</div>
+                            <div class="pc-detail" style="font-weight:600;color:var(--accent-green);">Shown on Job Runs, Test Results, FBC Summary tabs</div>
+                            <div class="pc-links"><a href="https://prow.ci.openshift.org/view/gs/test-platform-results/logs/periodic-ci-medik8s-system-tests-main-4.22-konflux-e2e-far-weekly-aws/1912951652924604416" target="_blank" rel="noopener noreferrer">example: Spyglass view</a> | <a href="https://gcsweb-ci.apps.ci.l2s4.p1.openshiftapps.com/gcs/test-platform-results/logs/periodic-ci-medik8s-system-tests-main-4.22-konflux-e2e-far-weekly-aws/1912951652924604416/artifacts/" target="_blank" rel="noopener noreferrer">GCS artifacts</a></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="pipe-fork-spacer"></div>
+                        <div class="pipe-card" id="pcStageProd" style="border:2px solid var(--accent-red);" title="After the IIB is built, it is pushed to registry.stage.redhat.io with an advisory. When approved, production ReleasePlan pushes images to registry.redhat.io.">
+                            <div class="pc-icon">&#x1F310;</div>
+                            <div class="pc-title" style="color:var(--accent-red);">Stage / Prod Registry</div>
+                            <div class="pc-sub">registry.stage.redhat.io / registry.redhat.io</div>
+                            <div class="pc-detail">Published with advisory. What customers install from OCP catalog.</div>
+                            <div class="pc-links"><a href="https://catalog.redhat.com/en/software/containers/workload-availability/fence-agents-remediation-rhel9-operator/673ef94a46d826196627d6f8" target="_blank" rel="noopener noreferrer">example: FAR on catalog</a></div>
+                        </div>
+                    </div>
+                </div>
+
+                </div>
+                </div>
+                <script>
+                (function() {
+                    function drawPipeArrows() {
+                        var svg = document.getElementById('pipeArrowsSvg');
+                        var diagram = document.getElementById('pipeDiagram');
+                        if (!svg || !diagram) return;
+                        var dr = diagram.getBoundingClientRect();
+                        if (dr.width === 0 || dr.height === 0) return;
+                        svg.setAttribute('width', diagram.scrollWidth);
+                        svg.setAttribute('height', diagram.scrollHeight);
+                        while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+                        function pos(id) {
+                            var el = document.getElementById(id);
+                            if (!el) return null;
+                            var r = el.getBoundingClientRect();
+                            if (r.width === 0) return null;
+                            return { l: r.left - dr.left, r: r.right - dr.left, cy: r.top + r.height/2 - dr.top };
+                        }
+
+                        function drawEdge(fromId, toId, cls, label, tooltip, url) {
+                            var from = pos(fromId), to = pos(toId);
+                            if (!from || !to) return;
+                            var x1 = from.r + 4, y1 = from.cy, x2 = to.l - 4, y2 = to.cy;
+                            var cx = Math.max(30, Math.abs(x2 - x1) * 0.4);
+                            var d = 'M ' + x1 + ' ' + y1 + ' C ' + (x1+cx) + ' ' + y1 + ', ' + (x2-cx) + ' ' + y2 + ', ' + x2 + ' ' + y2;
+                            var g = document.createElementNS('http://www.w3.org/2000/svg','g');
+                            g.setAttribute('class', 'edge-group');
+                            if (tooltip) {
+                                var title = document.createElementNS('http://www.w3.org/2000/svg','title');
+                                title.textContent = tooltip;
+                                g.appendChild(title);
+                            }
+                            var hitPath = document.createElementNS('http://www.w3.org/2000/svg','path');
+                            hitPath.setAttribute('d', d);
+                            hitPath.setAttribute('class', 'hit');
+                            g.appendChild(hitPath);
+                            var path = document.createElementNS('http://www.w3.org/2000/svg','path');
+                            path.setAttribute('d', d);
+                            path.setAttribute('class', cls);
+                            g.appendChild(path);
+                            [[x1,y1],[x2,y2]].forEach(function(pt) {
+                                var c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+                                c.setAttribute('cx', pt[0]); c.setAttribute('cy', pt[1]); c.setAttribute('r', 3);
+                                c.setAttribute('class', cls);
+                                g.appendChild(c);
+                            });
+                            if (label) {
+                                var mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+                                if (y2 < y1 - 5) my = my - 18;
+                                else if (y2 > y1 + 5) my = my + 22;
+                                else my = my - 12;
+                                var lblW = label.length * 7.5 + 16, lblH = 18;
+                                var bg = document.createElementNS('http://www.w3.org/2000/svg','rect');
+                                bg.setAttribute('x', mx - lblW/2); bg.setAttribute('y', my - lblH/2);
+                                bg.setAttribute('width', lblW); bg.setAttribute('height', lblH);
+                                bg.setAttribute('rx', 3);
+                                bg.setAttribute('fill', '#1a1d23'); bg.setAttribute('opacity', '0.9');
+                                g.appendChild(bg);
+                                var textEl;
+                                if (url) {
+                                    var a = document.createElementNS('http://www.w3.org/2000/svg','a');
+                                    a.setAttributeNS('http://www.w3.org/1999/xlink','href', url);
+                                    a.setAttribute('target', '_blank');
+                                    textEl = document.createElementNS('http://www.w3.org/2000/svg','text');
+                                    textEl.setAttribute('x', mx); textEl.setAttribute('y', my + 1);
+                                    textEl.setAttribute('class', cls);
+                                    textEl.setAttribute('dominant-baseline', 'middle');
+                                    textEl.textContent = label;
+                                    a.appendChild(textEl);
+                                    g.appendChild(a);
+                                } else {
+                                    textEl = document.createElementNS('http://www.w3.org/2000/svg','text');
+                                    textEl.setAttribute('x', mx); textEl.setAttribute('y', my + 1);
+                                    textEl.setAttribute('class', cls);
+                                    textEl.setAttribute('dominant-baseline', 'middle');
+                                    textEl.textContent = label;
+                                    g.appendChild(textEl);
+                                }
+                            }
+                            svg.appendChild(g);
+                        }
+
+                        drawEdge('pcUpstream','pcDownstream','main','Mintmaker','Mintmaker syncs upstream changes into the downstream dist-git repos automatically when a new version is tagged.','https://github.com/konflux-ci/mintmaker');
+                        drawEdge('pcDownstream','pcTekton','main','PaC trigger','Pipelines-as-Code detects the merge to main and triggers a Tekton pipeline build.','https://pipelinesascode.com/');
+                        drawEdge('pcTekton','pcQuay','main','pushes','The Tekton build pushes the FBC catalog container image to Quay registry.');
+                        drawEdge('pcQuay','pcSnapshot','main','creates','Konflux creates an immutable Snapshot CR referencing the image digest and source commit.');
+                        drawEdge('pcSnapshot','pcFbcImage','green','CatalogSource + IDMS','QE CI path: the medik8s-catalogsource Prow step creates a CatalogSource and ImageDigestMirrorSet on the test cluster, pointing to the FBC image from Quay.','https://github.com/openshift/release/tree/master/ci-operator/step-registry/medik8s/catalogsource');
+                        drawEdge('pcFbcImage','pcProwCi','green','Prow job','Prow provisions a fresh AWS cluster via IPI, installs operators via OLM using the FBC image, and runs Ginkgo E2E tests.','https://prow.ci.openshift.org/');
+                        drawEdge('pcProwCi','pcTestResults','green','GCS upload','Test results (JUnit XML, build logs, must-gather) are uploaded to GCS as Prow artifacts.','https://gcsweb-ci.apps.ci.l2s4.p1.openshiftapps.com/gcs/test-platform-results/logs/');
+                        drawEdge('pcSnapshot','pcEcPolicy','red','EC check','Release path: Enterprise Contract validates image provenance, signatures, SBOM, and FIPS compliance before allowing the release to proceed.','https://enterprisecontract.dev/');
+                        drawEdge('pcEcPolicy','pcIib','red','fbc-release','The fbc-release pipeline merges the RHWA FBC catalog with the full Red Hat OCP catalog into an Index Image Build (IIB).');
+                        drawEdge('pcIib','pcStageProd','red','advisory','The IIB is pushed to staging/production registries via an advisory. This is what customers install from the OCP catalog.');
+                    }
+                    window.drawPipeArrows = drawPipeArrows;
+                    window.addEventListener('resize', drawPipeArrows);
+                })();
+                </script>
+
+                <!-- Legend -->
+                <div class="pipe-section" style="margin-top:20px;">
+                    <h3>Legend</h3>
+                    <div style="display:flex;flex-wrap:wrap;gap:16px;font-size:0.8rem;">
+                        <div style="display:flex;align-items:center;gap:6px;"><span style="display:inline-block;width:16px;height:3px;background:var(--accent-green);border-radius:2px;"></span> QE CI path (Prow periodic jobs, tracked by this dashboard)</div>
+                        <div style="display:flex;align-items:center;gap:6px;"><span style="display:inline-block;width:16px;height:3px;background:var(--accent-red);border-radius:2px;"></span> Release path (IIB/staging, IIB build ID shown on FBC Summary)</div>
+                    </div>
+                </div>
+
+                <!-- Key identifiers -->
+                <div style="margin-top:16px;padding:16px;background:var(--bg-surface);border-radius:8px;border:1px solid var(--border);">
+                    <h3>Key Identifiers (what the numbers mean)</h3>
+                    <table style="width:100%;border-collapse:collapse;font-size:0.8rem;">
+                        <tr style="border-bottom:1px solid var(--border);">
+                            <td style="padding:8px;font-weight:600;color:var(--accent-red);white-space:nowrap;">IIB Build ID</td>
+                            <td style="padding:8px;">The primary identifier shown on the FBC Summary tab (e.g., <code>IIB 1187142</code>). This is the Index Image Build number from the fbc-release pipeline. It identifies the exact release candidate catalog that merges RHWA operators with the full Red Hat OCP catalog. This is what QE historically used to test operators before release.</td>
+                        </tr>
+                        <tr style="border-bottom:1px solid var(--border);">
+                            <td style="padding:8px;font-weight:600;color:var(--accent-red);white-space:nowrap;">IIB Image Digest</td>
+                            <td style="padding:8px;">The sha256 content digest of the IIB (e.g., <code>sha256:91c5eb524cd7...</code>). Immutable and unique. Shown in the expandable detail panel alongside the IIB build ID.</td>
+                        </tr>
+                        <tr style="border-bottom:1px solid var(--border);">
+                            <td style="padding:8px;font-weight:600;color:var(--accent-orange);white-space:nowrap;">Git Commit SHA</td>
+                            <td style="padding:8px;">The source code commit in dragonfly/rhwa-fbc that triggered the build (e.g., <code>831c2ada</code>). Shown as a secondary label next to the IIB ID. Click "GitLab" to see the exact source code diff.</td>
+                        </tr>
+                        <tr style="border-bottom:1px solid var(--border);">
+                            <td style="padding:8px;font-weight:600;color:var(--accent-purple);white-space:nowrap;">Snapshot Name</td>
+                            <td style="padding:8px;">Konflux immutable build record (e.g., <code>rhwa-fbc-&lt;ver&gt;-20260730-035530-000</code>). Click "Konflux" to see the Snapshot page with full build metadata and component image digests.</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:8px;font-weight:600;color:var(--accent-blue);white-space:nowrap;">Quay Image</td>
+                            <td style="padding:8px;">The FBC build image on Quay (e.g., <code>quay.io/.../rhwa-fbc-&lt;ver&gt;:831c2ada...</code>), where <code>&lt;ver&gt;</code> is the OCP version without dots (e.g., 422, 421). This is the raw RHWA-only catalog, before it is merged with the RH OCP index. Click "Quay" to see the image tags.</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Glossary -->
+                <div class="pipe-section">
+                    <h3>Glossary (for new team members)</h3>
+                    <dl style="font-size:0.85rem;margin:0;">
+                        <div class="glossary-term"><dt style="color:var(--accent-orange);">FBC</dt><dd>File-Based Catalog. A container image that lists available operator versions and their metadata. Think of it as an "app store catalog" that tells OLM what operators are available to install. Each OCP version (4.18, 4.22, etc.) has its own FBC image.</dd></div>
+                        <div class="glossary-term"><dt style="color:var(--accent-red);">IIB</dt><dd>Index Image Build. The result of merging an FBC catalog with the full Red Hat OCP operator catalog index. The IIB is the release candidate - it mimics what customers will see after the operators are officially released. Identified by a numeric build ID (e.g., 1187142) or an image digest.</dd></div>
+                        <div class="glossary-term"><dt style="color:var(--accent-blue);">OLM</dt><dd>Operator Lifecycle Manager. The OpenShift component that installs, updates, and manages operators. OLM reads a CatalogSource (which points to an FBC or IIB image), discovers available operators, and installs them via Subscriptions.</dd></div>
+                        <div class="glossary-term"><dt style="color:var(--accent-purple);">Konflux</dt><dd>Red Hat's build and release system (successor to OSBS/Brew). Konflux builds container images using Tekton pipelines, creates Snapshots (immutable build records), validates them with Enterprise Contract, and publishes them to registries. The RHWA team's Konflux tenant is "rhwa-tenant" on the stone-prod-p02 cluster.</dd></div>
+                        <div class="glossary-term"><dt style="color:var(--accent-green);">Prow</dt><dd>OpenShift's CI system that runs automated test jobs. Prow provisions temporary AWS clusters, installs operators using OLM, runs Ginkgo e2e tests, and uploads results to GCS. The dashboard collects and displays these results. Jobs run on dedicated build clusters (build01-build10).</dd></div>
+                        <div class="glossary-term"><dt>CatalogSource</dt><dd>A Kubernetes resource that registers an operator catalog with OLM. It points to a container image (FBC or IIB) and tells the cluster "here is a catalog of available operators." In CI, we create a CatalogSource pointing to the FBC build image from Quay.</dd></div>
+                        <div class="glossary-term"><dt>IDMS</dt><dd>ImageDigestMirrorSet. A cluster-level configuration that redirects image pulls from one registry to another. Required because RHWA operator images reference registry.redhat.io paths that don't exist yet (pre-release). The IDMS redirects pulls to the Quay pre-release images.</dd></div>
+                        <div class="glossary-term"><dt>Snapshot</dt><dd>A Konflux Custom Resource that records exactly what was built: the container image digest, source commit, build timestamp, and labels. Snapshots are immutable - once created, they never change. They are the "receipt" that proves what was built from what source.</dd></div>
+                        <div class="glossary-term"><dt>Enterprise Contract</dt><dd>A validation framework that checks built images against security and compliance policies before allowing a release. It verifies image provenance (was it built by a trusted pipeline?), signatures, SBOM completeness, and FIPS compliance.</dd></div>
+                        <div class="glossary-term"><dt>PaC</dt><dd>Pipelines-as-Code. A Tekton component that watches git repositories for push/PR events and triggers the appropriate Tekton pipelines. Pipeline definitions live in the .tekton/ directory of each repository.</dd></div>
+                    </dl>
+                </div>
+
+                <!-- Dashboard mapping -->
+                <div class="pipe-section">
+                    <h3>How this maps to dashboard tabs</h3>
+                    <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+                        <tr style="border-bottom:1px solid var(--border);">
+                            <td style="padding:8px;font-weight:600;white-space:nowrap;">FBC Summary</td>
+                            <td style="padding:8px;">Shows test results grouped by IIB build ID (the index image from the release path). Each card represents one FBC catalog version with all operator test results. The IIB ID is the primary identifier; the git commit SHA is shown as a secondary label.</td>
+                        </tr>
+                        <tr style="border-bottom:1px solid var(--border);">
+                            <td style="padding:8px;font-weight:600;white-space:nowrap;">Job Runs</td>
+                            <td style="padding:8px;">Shows individual Prow CI job executions grouped by FBC image. Each group header shows the IIB ID. Click a row to expand and see OCP version, CSV version, IIB details, and all log links.</td>
+                        </tr>
+                        <tr style="border-bottom:1px solid var(--border);">
+                            <td style="padding:8px;font-weight:600;white-space:nowrap;">Test Results</td>
+                            <td style="padding:8px;">Shows individual test case results (pass/fail) from Ginkgo e2e test suites. Each test is linked to a Polarion test case ID for requirements traceability.</td>
+                        </tr>
+                        <tr style="border-bottom:1px solid var(--border);">
+                            <td style="padding:8px;font-weight:600;white-space:nowrap;">Overview</td>
+                            <td style="padding:8px;">Summary cards showing overall pass rates, recent failures, and operator health across all periodic jobs.</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:8px;font-weight:600;white-space:nowrap;">Weekly Report</td>
+                            <td style="padding:8px;">Week-over-week comparison of pass rates and top failing tests, useful for tracking CI stability trends.</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Retriggering explained -->
+                <div class="pipe-section">
+                    <h3>How retriggering works (IIB vs FBC SHA)</h3>
+                    <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:12px;">When you retrigger a job from the dashboard, the system needs to know which FBC catalog image to use. Here is how the two identifiers relate:</p>
+                    <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+                        <tr style="border-bottom:1px solid var(--border);background:var(--bg-card);">
+                            <td style="padding:10px;font-weight:600;width:30%;">What you see on screen</td>
+                            <td style="padding:10px;">The <strong>IIB build ID</strong> (e.g., <code>IIB 1187142</code>). This is the release candidate number that Or and the team use. It represents the final index image that combines RHWA operators with the full Red Hat catalog.</td>
+                        </tr>
+                        <tr style="border-bottom:1px solid var(--border);">
+                            <td style="padding:10px;font-weight:600;">What happens when you click retrigger</td>
+                            <td style="padding:10px;">The dashboard automatically sends the <strong>FBC commit SHA</strong> (e.g., <code>831c2ada...</code>) to Prow. You never need to know or type the SHA. The button already carries it behind the scenes because each IIB maps to exactly one FBC commit.</td>
+                        </tr>
+                        <tr style="border-bottom:1px solid var(--border);">
+                            <td style="padding:10px;font-weight:600;">Why not retrigger with the IIB directly?</td>
+                            <td style="padding:10px;">Prow CI uses the raw FBC build image from Quay (tagged by commit SHA), not the IIB from registry-proxy. The IIB is a downstream release artifact. Using it would require the test cluster to have access to the internal Red Hat registry, which Prow AWS clusters do not have.</td>
+                        </tr>
+                        <tr style="border-bottom:1px solid var(--border);">
+                            <td style="padding:10px;font-weight:600;">The lookup text box</td>
+                            <td style="padding:10px;">The text box on the FBC Summary tab accepts <strong>both formats</strong>: type an IIB number (e.g., <code>1187142</code>) or an FBC SHA (e.g., <code>831c2ada</code>). The dashboard finds the matching entry either way.</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:10px;font-weight:600;">In simple terms</td>
+                            <td style="padding:10px;">Think of it like a receipt number vs. a barcode. The IIB number is the receipt you see and recognize. The FBC SHA is the barcode that the system scans internally. Both point to the same thing. You work with the receipt number; the system uses the barcode.</td>
+                        </tr>
                     </table>
                 </div>
             </div>
@@ -1342,13 +1741,17 @@
                     (tabName === 'job-runs' && btn.textContent.trim() === 'Job Runs') ||
                     (tabName === 'fbc-validation' && btn.textContent.trim() === 'FBC Summary') ||
                     (tabName === 'presubmit' && btn.textContent.trim() === 'Presubmit') ||
-                    (tabName === 'weekly-report' && btn.textContent.trim() === 'Weekly Report')) {
+                    (tabName === 'weekly-report' && btn.textContent.trim() === 'Weekly Report') ||
+                    (tabName === 'pipeline' && btn.textContent.trim() === 'Pipeline')) {
                     btn.classList.add('active');
                     btn.setAttribute('aria-selected', 'true');
                 }
             });
             var sharedFilters = document.getElementById('sharedFilters');
-            if (sharedFilters) sharedFilters.style.display = (tabName === 'weekly-report') ? 'none' : 'flex';
+            if (sharedFilters) sharedFilters.style.display = (tabName === 'weekly-report' || tabName === 'pipeline') ? 'none' : 'flex';
+            if (tabName === 'pipeline' && typeof drawPipeArrows === 'function') {
+                setTimeout(drawPipeArrows, 50);
+            }
             if (tabName === 'weekly-report') refreshWeeklyReport();
             if (tabName === 'test-results') loadTestResults();
             if (tabName === 'job-runs') { loadJobRuns(); loadTriggerButtons(); loadRecentTriggers(); }
@@ -1472,27 +1875,52 @@
 
         function getFbcShaOrError() {
             var input = document.getElementById('fbcShaInput');
-            var sha = (input.value || '').trim();
-            if (sha && !/^[0-9a-fA-F]{7,40}$/.test(sha)) {
+            var val = (input.value || '').trim();
+            if (!val) { input.style.borderColor = 'var(--border)'; return ''; }
+            var isIib = /^\d+$/.test(val);
+            var isSha = /^[0-9a-fA-F]{7,40}$/.test(val);
+            var isSnapshot = val.indexOf('-') >= 0 && !isSha;
+            if (!isIib && !isSha && !isSnapshot) {
                 input.style.borderColor = 'var(--accent-red)';
-                document.getElementById('triggerStatus').textContent = 'Invalid FBC SHA: must be 7-40 hex characters';
+                document.getElementById('triggerStatus').textContent = 'Enter a snapshot name, IIB ID, or FBC SHA';
+                document.getElementById('triggerStatus').style.color = 'var(--accent-red)';
+                return null;
+            }
+            if ((isIib || isSnapshot) && _fbcCache) {
+                var summaries = _fbcCache.fbc_summaries || [];
+                var match = isIib
+                    ? summaries.find(function(s) { return s.iib_id == val; })
+                    : summaries.find(function(s) { return s.snapshot_name === val; });
+                if (match) {
+                    input.style.borderColor = 'var(--border)';
+                    return match.fbc_short;
+                }
+                input.style.borderColor = 'var(--accent-red)';
+                document.getElementById('triggerStatus').textContent = val + ' not found in cached FBC data. Load the FBC Summary tab first, or enter the FBC SHA directly.';
                 document.getElementById('triggerStatus').style.color = 'var(--accent-red)';
                 return null;
             }
             input.style.borderColor = 'var(--border)';
-            return sha;
+            return val;
         }
 
         async function triggerJob(btn, jobName, label) {
             var fbcSha = getFbcShaOrError();
             if (fbcSha === null) return;
+            var userInput = (document.getElementById('fbcShaInput').value || '').trim();
+            var snapName = '';
+            if (_fbcCache && _fbcCache.fbc_summaries) {
+                var ms = _fbcCache.fbc_summaries.find(function(s) { return s.fbc_short === fbcSha.slice(0,7) || s.fbc_full === fbcSha; });
+                if (ms) snapName = ms.snapshot_name || '';
+            }
+            var displayPin = snapName || userInput || fbcSha;
             var confirmMsg = 'Trigger Prow job: ' + label + '?';
-            if (fbcSha) confirmMsg += '\n\nFBC pinned to: ' + fbcSha;
+            if (fbcSha) confirmMsg += '\n\nFBC pinned to: ' + displayPin + (displayPin !== fbcSha ? ' (SHA: ' + fbcSha + ')' : '');
             if (!confirm(confirmMsg)) return;
             var status = document.getElementById('triggerStatus');
             var allBtns = document.querySelectorAll('.trigger-btn');
             allBtns.forEach(function(b) { b.disabled = true; });
-            status.textContent = 'Triggering ' + label + (fbcSha ? ' (FBC: ' + fbcSha.slice(0,8) + ')' : '') + '...';
+            status.textContent = 'Triggering ' + label + (fbcSha ? ' (' + displayPin + ')' : '') + '...';
             status.style.color = 'var(--text-muted)';
             try {
                 var payload = {job_name: jobName};
@@ -1539,8 +1967,13 @@
         async function triggerAllJobs(btn) {
             var fbcSha = getFbcShaOrError();
             if (fbcSha === null) return;
+            var snapDisplay = fbcSha;
+            if (_fbcCache && _fbcCache.fbc_summaries) {
+                var ms = _fbcCache.fbc_summaries.find(function(s) { return s.fbc_short === fbcSha.slice(0,7) || s.fbc_full === fbcSha; });
+                if (ms && ms.snapshot_name) snapDisplay = ms.snapshot_name;
+            }
             var confirmMsg = 'Trigger all configured periodic jobs?\n\nJobs on cooldown will be skipped.';
-            if (fbcSha) confirmMsg += '\n\nFBC pinned to: ' + fbcSha;
+            if (fbcSha) confirmMsg += '\n\nFBC pinned to: ' + snapDisplay;
             if (!confirm(confirmMsg)) return;
             var status = document.getElementById('triggerStatus');
             var allBtns = document.querySelectorAll('.trigger-btn');
@@ -1595,6 +2028,12 @@
             var section = document.getElementById('recentTriggersSection');
             var list = document.getElementById('recentTriggersList');
             if (refresh && btn) { btn.disabled = true; btn.textContent = 'Refreshing...'; btn.style.cursor = 'not-allowed'; }
+            if (!_fbcCache) {
+                try {
+                    var fbcResp = await fetch('/api/fbc-summary?' + new URLSearchParams({days: document.getElementById('timeRange').value}));
+                    if (fbcResp.ok) _fbcCache = await fbcResp.json();
+                } catch (e) {}
+            }
             try {
                 var url = '/api/trigger-job/history?limit=20' + (refresh ? '&refresh=1' : '');
                 var resp = await fetch(url);
@@ -1603,7 +2042,7 @@
                 if (!items || items.length === 0) { section.style.display = 'none'; return; }
                 section.style.display = '';
                 var html = '<table style="width:100%;border-collapse:collapse;">';
-                html += '<tr style="color:var(--text-muted);font-size:0.7rem;"><th style="text-align:left;padding:2px 8px;">Job</th><th style="text-align:left;padding:2px 8px;">Status</th><th style="text-align:left;padding:2px 8px;">FBC</th><th style="text-align:left;padding:2px 8px;">Triggered</th><th style="text-align:left;padding:2px 8px;">Prow Job</th></tr>';
+                html += '<tr style="color:var(--text-muted);font-size:0.7rem;"><th style="text-align:left;padding:2px 8px;">Job</th><th style="text-align:left;padding:2px 8px;">Status</th><th style="text-align:left;padding:2px 8px;">Snapshot / FBC</th><th style="text-align:left;padding:2px 8px;">Triggered</th><th style="text-align:left;padding:2px 8px;">Prow Job</th></tr>';
                 items.forEach(function(t) {
                     var op = (t.operator || '').toUpperCase();
                     var jobLabel = t.job_name ? _shortJobLabel(t.job_name) : '';
@@ -1626,7 +2065,18 @@
                     if (t.prow_job_url) { prowLink = linkEl(t.prow_job_url, 'View Job'); }
                     else if (t.job_name) { prowLink = linkEl('https://prow.ci.openshift.org/job-history/gs/test-platform-results/logs/' + encodeURIComponent(t.job_name), 'View Job'); }
                     html += '<tr style="border-top:1px solid var(--border);">';
-                    var fbcCell = t.fbc_commit_sha ? '<code style="font-size:0.7rem;color:var(--accent-purple);">' + esc(t.fbc_commit_sha.slice(0,8)) + '</code>' : '<span style="color:var(--text-muted);font-size:0.7rem;">latest</span>';
+                    var fbcCell = '';
+                    if (t.fbc_commit_sha) {
+                        var trigShort = t.fbc_commit_sha.slice(0,8).toLowerCase();
+                        var matchedName = '';
+                        if (_fbcCache && _fbcCache.fbc_summaries) {
+                            var ms = _fbcCache.fbc_summaries.find(function(s) { return s.fbc_short === trigShort.slice(0,7) || s.fbc_full === t.fbc_commit_sha; });
+                            if (ms) matchedName = ms.snapshot_name || (ms.iib_id ? 'IIB ' + ms.iib_id : '');
+                        }
+                        fbcCell = matchedName ? '<code style="font-size:0.7rem;color:var(--accent-purple);">' + esc(matchedName) + '</code>' : '<code style="font-size:0.7rem;color:var(--text-muted);">' + esc(trigShort) + '</code>';
+                    } else {
+                        fbcCell = '<span style="color:var(--text-muted);font-size:0.7rem;">latest</span>';
+                    }
                     html += '<td style="padding:4px 8px;">' + opChip(op) + ' <span style="font-size:0.75rem;">' + esc(jobLabel) + '</span></td>';
                     html += '<td style="padding:4px 8px;">' + stHtml + '</td>';
                     html += '<td style="padding:4px 8px;">' + fbcCell + '</td>';
@@ -2886,11 +3336,15 @@
         function buildFbcLabel(key, g) {
             var isNoFbc = key.startsWith(NO_FBC_PREFIX);
             if (g.fbc_image) {
-                var label = '<span class="fbc-id-text" onclick="event.stopPropagation()">' + esc(g.fbc_short || g.fbc_image) + '</span>';
+                var primaryId = g.snapshot_name ? esc(g.snapshot_name) : (g.iib_id ? 'IIB ' + esc(g.iib_id) : (g.iib_digest_short ? esc(g.iib_digest_short) : esc(g.fbc_short || g.fbc_image)));
+                var titleAttr = g.snapshot_name ? ' title="Konflux Snapshot' + (g.iib_id ? ', IIB ' + esc(g.iib_id) : '') + '"' : (g.iib_id ? ' title="IIB ' + esc(g.iib_id) + '"' : '');
+                var label = '<span class="fbc-id-text" onclick="event.stopPropagation()"' + titleAttr + '>' + primaryId + '</span>';
+                if ((g.snapshot_name || g.iib_id) && g.fbc_short) label += ' <span style="font-size:0.65rem;color:var(--text-muted);margin-left:4px;" title="FBC source commit">' + esc(g.fbc_short) + '</span>';
+                if (g.fbc_konflux_url) label += ' <a href="' + esc(g.fbc_konflux_url) + '" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="color:var(--accent-purple);text-decoration:none;font-size:0.75rem;margin-left:8px;" title="View Konflux Snapshot">Konflux</a>';
+                if (g.fbc_gitlab_url) label += ' <a href="' + esc(g.fbc_gitlab_url) + '" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="color:var(--accent-orange);text-decoration:none;font-size:0.75rem;margin-left:6px;" title="View FBC source commit on GitLab">GitLab</a>';
+                if (g.iib_log_url) label += ' <a href="' + esc(g.iib_log_url) + '" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="color:var(--accent-red);text-decoration:none;font-size:0.75rem;margin-left:6px;" title="FBC release artifacts on Konflux">FBC Release</a>';
                 var quayUrl = g.fbc_quay_url || g.fbc_url || '';
-                if (quayUrl) label += ' <a href="' + esc(quayUrl) + '" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="color:var(--accent-blue);text-decoration:none;font-size:0.75rem;margin-left:6px;" title="View on Quay">Quay</a>';
-                if (g.fbc_konflux_url) label += ' <a href="' + esc(g.fbc_konflux_url) + '" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="color:var(--accent-purple);text-decoration:none;font-size:0.75rem;margin-left:6px;" title="View Konflux Snapshots">Konflux</a>';
-                if (g.fbc_gitlab_url) label += ' <a href="' + esc(g.fbc_gitlab_url) + '" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="color:var(--accent-orange);text-decoration:none;font-size:0.75rem;margin-left:6px;" title="View FBC commit on GitLab">GitLab</a>';
+                if (quayUrl) label += ' <a href="' + esc(quayUrl) + '" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="color:var(--accent-blue);text-decoration:none;font-size:0.75rem;margin-left:6px;" title="View FBC build image on Quay">Quay</a>';
                 return label;
             }
             var noFbcDate = isNoFbc ? key.split(':')[1] || '' : '';
@@ -2920,18 +3374,34 @@
             items.push('<div><strong>OCP Version</strong>' + esc(r.ocp_version || r.version || '-') + '</div>');
             items.push('<div><strong>Platform</strong>' + esc(fmtPlatform(r.platform || '-')) + '</div>');
             items.push('<div><strong>CSV Version</strong>' + esc(r.csv_version || '-') + '</div>');
-            var fbcHtml = '<div><strong>FBC Image (Quay)</strong>';
+            var fbcHtml = '<div><strong>FBC Image</strong>';
             if (r.fbc_image || r.fbc_image_short) {
                 fbcHtml += r.fbc_image_short ? '<span class="fbc-id-text">' + esc(r.fbc_image_short) + '</span>' : esc(r.fbc_image);
-                var quayUrl = r.fbc_quay_url || r.fbc_image_url;
-                if (quayUrl) fbcHtml += ' <a href="' + esc(quayUrl) + '" target="_blank" rel="noopener noreferrer" style="color:var(--accent-blue);text-decoration:none;font-size:0.75rem;margin-left:6px;" title="View on Quay">Quay</a>';
                 if (r.fbc_konflux_url) fbcHtml += ' <a href="' + esc(r.fbc_konflux_url) + '" target="_blank" rel="noopener noreferrer" style="color:var(--accent-purple);text-decoration:none;font-size:0.75rem;margin-left:6px;" title="View Konflux Snapshots">Konflux</a>';
                 if (r.fbc_gitlab_url) fbcHtml += ' <a href="' + esc(r.fbc_gitlab_url) + '" target="_blank" rel="noopener noreferrer" style="color:var(--accent-orange);text-decoration:none;font-size:0.75rem;margin-left:6px;" title="View FBC commit on GitLab">GitLab</a>';
+                var quayUrl = r.fbc_quay_url || r.fbc_image_url;
+                if (quayUrl) fbcHtml += ' <a href="' + esc(quayUrl) + '" target="_blank" rel="noopener noreferrer" style="color:var(--accent-blue);text-decoration:none;font-size:0.75rem;margin-left:6px;" title="View on Quay">Quay</a>';
             } else {
                 fbcHtml += '-';
             }
             fbcHtml += '</div>';
             items.push(fbcHtml);
+            var iibHtml = '<div><strong>Index Image</strong> ';
+            if (r.iib_resolved && r.iib_resolved.indexOf('@') > 0) {
+                var iiParts = r.iib_resolved.split('@');
+                var shortDigest = iiParts[1].length > 23 ? iiParts[1].slice(0, 23) + '...' : iiParts[1];
+                iibHtml += '<span style="font-size:0.75rem;word-break:break-all;" title="' + esc(r.iib_resolved) + '">' + esc(iiParts[0]) + '@<strong style="color:var(--accent-red);">' + esc(shortDigest) + '</strong></span>';
+                iibHtml += ' <button onclick="navigator.clipboard.writeText(\'' + esc(r.iib_resolved).replace(/'/g, "\\'") + '\');this.textContent=\'Copied\';setTimeout(function(){this.textContent=\'Copy\';}.bind(this),1500);" style="padding:1px 6px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;font-size:0.65rem;" title="Copy full Index Image reference">Copy</button>';
+                if (r.iib_log_url) iibHtml += ' <a href="' + esc(r.iib_log_url) + '" target="_blank" rel="noopener noreferrer" style="color:var(--accent-red);text-decoration:none;font-size:0.75rem;margin-left:6px;" title="FBC release artifacts on Konflux">FBC Release</a>';
+            } else if (r.iib_id) {
+                iibHtml += '<span style="font-weight:600;color:var(--accent-red);">IIB ' + esc(r.iib_id) + '</span>';
+                if (r.iib_digest_short) iibHtml += ' <span style="font-size:0.7rem;color:var(--text-muted);">(' + esc(r.iib_digest_short) + ')</span>';
+                if (r.iib_log_url) iibHtml += ' <a href="' + esc(r.iib_log_url) + '" target="_blank" rel="noopener noreferrer" style="color:var(--accent-red);text-decoration:none;font-size:0.75rem;margin-left:6px;" title="FBC release artifacts on Konflux">FBC Release</a>';
+            } else {
+                iibHtml += '<span style="font-size:0.75rem;color:var(--text-muted);">Not released yet</span>';
+            }
+            iibHtml += '</div>';
+            items.push(iibHtml);
             items.push('<div><strong>Full Job Name</strong><span style="font-size:0.75rem;">' + esc(r.job_name || r.periodic_job || '-') + '</span></div>');
             items.push('<div><strong>Build ID</strong>' + esc(r.build_id || '-') + '</div>');
             items.push('<div><strong>Prow Job</strong>' + linkEl(r.prow_url, 'View Job') + '</div>');
@@ -3056,6 +3526,7 @@
                         fbcGroups[key] = {
                             fbc_image: r.fbc_image || '', fbc_short: '', fbc_url: '',
                             fbc_quay_url: '', fbc_konflux_url: '', fbc_gitlab_url: '',
+                            iib_id: '', iib_digest_short: '', iib_url: '', iib_log_url: '', iib_resolved: '', snapshot_name: '',
                             latestRunDate: null, total: 0, passed: 0, failed: 0,
                             byOperator: {}
                         };
@@ -3066,6 +3537,12 @@
                     if (!g.fbc_quay_url && r.fbc_quay_url) g.fbc_quay_url = r.fbc_quay_url;
                     if (!g.fbc_konflux_url && r.fbc_konflux_url) g.fbc_konflux_url = r.fbc_konflux_url;
                     if (!g.fbc_gitlab_url && r.fbc_gitlab_url) g.fbc_gitlab_url = r.fbc_gitlab_url;
+                    if (!g.iib_id && r.iib_id) g.iib_id = r.iib_id;
+                    if (!g.iib_digest_short && r.iib_digest_short) g.iib_digest_short = r.iib_digest_short;
+                    if (!g.iib_url && r.iib_url) g.iib_url = r.iib_url;
+                    if (!g.iib_log_url && r.iib_log_url) g.iib_log_url = r.iib_log_url;
+                    if (!g.iib_resolved && r.iib_resolved) g.iib_resolved = r.iib_resolved;
+                    if (!g.snapshot_name && r.snapshot_name) g.snapshot_name = r.snapshot_name;
                     g.total++;
                     if (r.result === 'passed') g.passed++;
                     else if (r.result === 'failed') g.failed++;
@@ -3161,6 +3638,26 @@
 
         // ---- Job Runs tab ----
         async function loadJobRuns() {
+            try {
+                var schedResp = await fetch('/api/job-schedules');
+                if (schedResp.ok) {
+                    var schedData = await schedResp.json();
+                    var sched = schedData.job_schedules || {};
+                    var dayOrder = {Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6,Sun:7};
+                    var keys = Object.keys(sched).sort(function(a,b) {
+                        var da = (sched[a].day||'').slice(0,3), db = (sched[b].day||'').slice(0,3);
+                        var diff = (dayOrder[da]||99) - (dayOrder[db]||99);
+                        return diff !== 0 ? diff : (sched[a].day||'').localeCompare(sched[b].day||'');
+                    });
+                    var sh = '<table style="width:100%;border-collapse:collapse;">';
+                    sh += '<tr style="color:var(--text-muted);font-size:0.7rem;border-bottom:1px solid var(--border);"><th style="text-align:left;padding:4px 8px;">Job</th><th style="text-align:left;padding:4px 8px;">Operator</th><th style="text-align:left;padding:4px 8px;">Schedule</th></tr>';
+                    keys.forEach(function(k) {
+                        sh += '<tr style="border-bottom:1px solid var(--border);"><td style="padding:4px 8px;font-family:monospace;font-size:0.75rem;">' + esc(k) + '</td><td style="padding:4px 8px;font-weight:600;">' + esc(sched[k].label) + '</td><td style="padding:4px 8px;">' + esc(sched[k].day) + '</td></tr>';
+                    });
+                    sh += '</table>';
+                    document.getElementById('jobScheduleTable').innerHTML = sh;
+                }
+            } catch(e) {}
             var table = document.getElementById('jobRunsBody').closest('table');
             table.querySelectorAll('tbody.fbc-group').forEach(function(b) { b.remove(); });
             var tbody = document.getElementById('jobRunsBody');
@@ -3189,6 +3686,7 @@
                         fbcGroups[key] = {
                             fbc_image: r.fbc_image || '', fbc_short: '',
                             fbc_quay_url: '', fbc_konflux_url: '', fbc_gitlab_url: '',
+                            iib_id: '', iib_digest_short: '', iib_url: '', iib_log_url: '', iib_resolved: '', snapshot_name: '',
                             latestRunDate: null, total: 0, passed: 0, failed: 0,
                             runs: []
                         };
@@ -3198,6 +3696,12 @@
                     if (!g.fbc_quay_url && r.fbc_quay_url) g.fbc_quay_url = r.fbc_quay_url;
                     if (!g.fbc_konflux_url && r.fbc_konflux_url) g.fbc_konflux_url = r.fbc_konflux_url;
                     if (!g.fbc_gitlab_url && r.fbc_gitlab_url) g.fbc_gitlab_url = r.fbc_gitlab_url;
+                    if (!g.iib_id && r.iib_id) g.iib_id = r.iib_id;
+                    if (!g.iib_digest_short && r.iib_digest_short) g.iib_digest_short = r.iib_digest_short;
+                    if (!g.iib_url && r.iib_url) g.iib_url = r.iib_url;
+                    if (!g.iib_log_url && r.iib_log_url) g.iib_log_url = r.iib_log_url;
+                    if (!g.iib_resolved && r.iib_resolved) g.iib_resolved = r.iib_resolved;
+                    if (!g.snapshot_name && r.snapshot_name) g.snapshot_name = r.snapshot_name;
                     g.total++;
                     if (r.status === 'passed') g.passed++;
                     else if (r.status === 'failed') g.failed++;
@@ -3297,7 +3801,8 @@
                 summaries.forEach(function(fbc, i) {
                     var opt = document.createElement('option');
                     opt.value = fbc.fbc_short;
-                    var label = fbc.fbc_short + '  ' + fbc.passed + '/' + fbc.total + ' passed';
+                    var displayId = fbc.snapshot_name || (fbc.iib_id ? 'IIB ' + fbc.iib_id : (fbc.iib_digest_short || fbc.fbc_short));
+                    var label = fbc.has_runs === false ? displayId + '  (no test runs)' : displayId + '  ' + fbc.passed + '/' + fbc.total + ' passed';
                     opt.textContent = label;
                     sel.appendChild(opt);
                 });
@@ -3311,25 +3816,41 @@
         });
         function lookupFbc() {
             var input = document.getElementById('fbcLookupInput');
-            var sha = (input.value || '').trim();
-            if (!sha || !/^[0-9a-fA-F]{7,40}$/.test(sha)) {
-                input.style.borderColor = 'var(--accent-red)';
-                document.getElementById('fbcValStatus').textContent = 'Invalid SHA';
-                return;
-            }
+            var val = (input.value || '').trim();
+            if (!val) { input.style.borderColor = 'var(--accent-red)'; document.getElementById('fbcValStatus').textContent = 'Enter a snapshot name, IIB ID, or FBC SHA'; return; }
             input.style.borderColor = 'var(--border)';
-            var short = sha.slice(0, 8).toLowerCase();
-            var sel = document.getElementById('fbcSelector');
-            var found = false;
-            for (var i = 0; i < sel.options.length; i++) {
-                if (sel.options[i].value === short) { sel.selectedIndex = i; found = true; break; }
-            }
-            if (found) {
-                renderFbcCard(short);
-                document.getElementById('fbcValStatus').textContent = '';
+            var isIib = /^\d+$/.test(val);
+            var isSha = /^[0-9a-fA-F]{7,40}$/.test(val);
+            var isSnapshot = val.indexOf('-') >= 0 && !isSha;
+            if (!isIib && !isSha && !isSnapshot) { input.style.borderColor = 'var(--accent-red)'; document.getElementById('fbcValStatus').textContent = 'Enter a snapshot name, IIB ID, or FBC SHA'; return; }
+            if (isIib || isSnapshot) {
+                var summaries = (_fbcCache || {}).fbc_summaries || [];
+                var match = isIib ? summaries.find(function(s) { return s.iib_id === val; }) : summaries.find(function(s) { return s.snapshot_name === val; });
+                if (match) {
+                    var sel = document.getElementById('fbcSelector');
+                    for (var i = 0; i < sel.options.length; i++) {
+                        if (sel.options[i].value === match.fbc_short) { sel.selectedIndex = i; break; }
+                    }
+                    renderFbcCard(match.fbc_short);
+                    document.getElementById('fbcValStatus').textContent = '';
+                } else {
+                    document.getElementById('fbcValStatus').textContent = val + ' not found in current data. Try a different time range.';
+                    document.getElementById('fbcValidationContent').innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);"><code>' + esc(val) + '</code> not found in the loaded data. It may be from an older build not in the current time range.</div>';
+                }
             } else {
-                document.getElementById('fbcValStatus').textContent = 'FBC ' + short + ' not found in current data';
-                document.getElementById('fbcValidationContent').innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">FBC <code>' + esc(short) + '</code> not found. Try increasing the time range, or check that this FBC was used in a periodic job run.</div>';
+                var short = val.slice(0, 8).toLowerCase();
+                var sel = document.getElementById('fbcSelector');
+                var found = false;
+                for (var i = 0; i < sel.options.length; i++) {
+                    if (sel.options[i].value === short) { sel.selectedIndex = i; found = true; break; }
+                }
+                if (found) {
+                    renderFbcCard(short);
+                    document.getElementById('fbcValStatus').textContent = '';
+                } else {
+                    document.getElementById('fbcValStatus').textContent = 'FBC ' + short + ' not found in current data';
+                    document.getElementById('fbcValidationContent').innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">FBC <code>' + esc(short) + '</code> not found. Try increasing the time range.</div>';
+                }
             }
         }
         function renderFbcCard(fbcShort) {
@@ -3342,12 +3863,15 @@
             var allPass = fbc.failed === 0 && fbc.total > 0;
             var borderColor = allPass ? 'var(--accent-green)' : (fbc.failed > 0 ? 'var(--accent-red)' : 'var(--border)');
             var links = '';
-            if (fbc.fbc_quay_url) links += '<a href="' + esc(fbc.fbc_quay_url) + '" target="_blank" rel="noopener noreferrer" style="color:var(--accent-blue);text-decoration:none;font-size:0.75rem;margin-right:10px;">Quay</a>';
             if (fbc.fbc_konflux_url) links += '<a href="' + esc(fbc.fbc_konflux_url) + '" target="_blank" rel="noopener noreferrer" style="color:var(--accent-purple);text-decoration:none;font-size:0.75rem;margin-right:10px;">Konflux</a>';
-            if (fbc.fbc_gitlab_url) links += '<a href="' + esc(fbc.fbc_gitlab_url) + '" target="_blank" rel="noopener noreferrer" style="color:var(--accent-orange);text-decoration:none;font-size:0.75rem;">GitLab</a>';
+            if (fbc.fbc_gitlab_url) links += '<a href="' + esc(fbc.fbc_gitlab_url) + '" target="_blank" rel="noopener noreferrer" style="color:var(--accent-orange);text-decoration:none;font-size:0.75rem;margin-right:10px;">GitLab</a>';
+            if (fbc.iib_log_url) links += '<a href="' + esc(fbc.iib_log_url) + '" target="_blank" rel="noopener noreferrer" style="color:var(--accent-red);text-decoration:none;font-size:0.75rem;margin-right:10px;">FBC Release</a>';
+            if (fbc.fbc_quay_url) links += '<a href="' + esc(fbc.fbc_quay_url) + '" target="_blank" rel="noopener noreferrer" style="color:var(--accent-blue);text-decoration:none;font-size:0.75rem;">Quay</a>';
+            var primaryId = fbc.snapshot_name ? esc(fbc.snapshot_name) : (fbc.iib_id ? 'IIB ' + esc(fbc.iib_id) : (fbc.iib_digest_short ? esc(fbc.iib_digest_short) : esc(fbc.fbc_short)));
+            var secondaryId = (fbc.snapshot_name || fbc.iib_id) ? ' <span style="font-size:0.7rem;color:var(--text-muted);margin-left:6px;" title="FBC source commit">' + esc(fbc.fbc_short) + '</span>' : '';
             var html = '<div style="border:2px solid ' + borderColor + ';border-radius:8px;background:var(--bg-card);overflow:hidden;">';
             html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--bg-surface);border-bottom:1px solid var(--border);">';
-            html += '<div><span class="fbc-id-text" style="font-weight:700;font-size:1.1rem;">' + esc(fbc.fbc_short) + '</span> ' + links + '</div>';
+            html += '<div><span class="fbc-id-text" style="font-weight:700;font-size:1.1rem;">' + primaryId + '</span>' + secondaryId + ' <span style="margin-left:12px;">' + links + '</span></div>';
             html += '<div style="display:flex;align-items:center;gap:10px;">';
             html += '<span style="font-size:0.8rem;color:var(--text-muted);">' + esc(fbc.latest_date) + '</span>';
             html += '<span class="fbc-badge fbc-badge--pass">' + fbc.passed + ' passed</span>';
@@ -3358,7 +3882,7 @@
             html += '<colgroup><col style="width:28%"><col style="width:10%"><col style="width:10%"><col style="width:10%"><col style="width:12%"><col style="width:10%"><col style="width:10%"><col style="width:5%"></colgroup>';
             html += '<tr style="font-size:0.75rem;color:var(--text-muted);"><th style="text-align:left;padding:6px 16px;">Job</th><th style="text-align:center;padding:6px 8px;">Status</th><th style="text-align:center;padding:6px 8px;">Tests (P/F)</th><th style="text-align:center;padding:6px 8px;">Duration</th><th style="text-align:center;padding:6px 8px;">Run Date</th><th style="text-align:center;padding:6px 8px;">Prow Job</th><th style="text-align:center;padding:6px 8px;">Test Log</th><th style="text-align:center;padding:6px 8px;"></th></tr>';
             var opKeys = Object.keys(fbc.operators).sort();
-            opKeys.forEach(function(key) {
+            opKeys.forEach(function(key, opIdx) {
                 var o = fbc.operators[key];
                 var op = o.operator || deriveOperator(key) || key;
                 var fullJob = o.job_name || allJobMap[key] || '';
@@ -3367,9 +3891,10 @@
                 var prowLink = o.prow_url ? '<a href="' + esc(o.prow_url) + '" target="_blank" rel="noopener noreferrer" style="color:var(--accent-blue);text-decoration:none;font-size:0.8rem;">View Job</a>' : '-';
                 var logLink = o.e2e_log_url ? '<a href="' + esc(o.e2e_log_url) + '" target="_blank" rel="noopener noreferrer" style="color:var(--accent-blue);text-decoration:none;font-size:0.8rem;">Test Log</a>' : '-';
                 var runDate = o.run_date ? fmtDate(o.run_date) : '-';
-                var triggerBtn = fullJob ? '<button onclick="fbcTriggerJob(\'' + esc(fullJob) + '\',\'' + esc(fbc.fbc_full) + '\',this)" title="Retrigger" style="padding:2px 6px;border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;font-size:0.7rem;">&#x21BB;</button>' : '-';
-                html += '<tr style="border-top:1px solid var(--border);">';
-                html += '<td style="padding:6px 16px;white-space:nowrap;">' + opChip(op) + ' <span style="font-size:0.8rem;color:var(--text-muted);">' + esc(key) + '</span></td>';
+                var triggerBtn = fullJob ? '<button onclick="event.stopPropagation();fbcTriggerJob(\'' + esc(fullJob) + '\',\'' + esc(fbc.fbc_full) + '\',this,\'' + esc(fbc.snapshot_name || '') + '\')" title="Retrigger" style="padding:2px 6px;border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;font-size:0.7rem;">&#x21BB;</button>' : '-';
+                var detailId = 'fbc-detail-' + esc(fbcShort) + '-' + opIdx;
+                html += '<tr style="border-top:1px solid var(--border);cursor:pointer;" onclick="document.getElementById(\'' + detailId + '\').classList.toggle(\'open\')">';
+                html += '<td style="padding:6px 16px;white-space:nowrap;"><span class="expand-arrow" style="display:inline-block;transition:transform 0.2s;margin-right:4px;font-size:0.6rem;">&#9654;</span>' + opChip(op) + ' <span style="font-size:0.8rem;color:var(--text-muted);">' + esc(key) + '</span></td>';
                 html += '<td style="text-align:center;"><span class="' + statusCls + '">' + esc(o.status.toUpperCase()) + '</span></td>';
                 html += '<td style="text-align:center;font-size:0.85rem;">' + tests + '</td>';
                 html += '<td style="text-align:center;font-size:0.85rem;">' + esc(o.duration || '-') + '</td>';
@@ -3378,15 +3903,19 @@
                 html += '<td style="text-align:center;">' + logLink + '</td>';
                 html += '<td style="text-align:center;">' + triggerBtn + '</td>';
                 html += '</tr>';
+                html += '<tr id="' + detailId + '" class="detail-row"><td colspan="8">' + buildDetailGrid(o) + '</td></tr>';
             });
             allOps.forEach(function(key) {
                 if (opKeys.indexOf(key) !== -1) return;
                 var op = deriveOperator(key) || key;
                 var fullJob = allJobMap[key] || '';
-                var triggerBtn = fullJob ? '<button onclick="fbcTriggerJob(\'' + esc(fullJob) + '\',\'' + esc(fbc.fbc_full) + '\',this)" title="Retrigger" style="padding:2px 6px;border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;font-size:0.7rem;">&#x21BB;</button>' : '-';
+                var triggerBtn = fullJob ? '<button onclick="fbcTriggerJob(\'' + esc(fullJob) + '\',\'' + esc(fbc.fbc_full) + '\',this,\'' + esc(fbc.snapshot_name || '') + '\')" title="Retrigger" style="padding:2px 6px;border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;font-size:0.7rem;">&#x21BB;</button>' : '-';
                 html += '<tr style="border-top:1px solid var(--border);opacity:0.5;">';
                 html += '<td style="padding:6px 16px;white-space:nowrap;">' + opChip(op) + ' <span style="font-size:0.8rem;color:var(--text-muted);">' + esc(key) + '</span></td>';
-                html += '<td style="text-align:center;color:var(--text-muted);font-size:0.8rem;">NOT RUN</td>';
+                var schedInfo = '';
+                var schedMap = (_fbcCache || {}).job_schedules || {};
+                for (var sk in schedMap) { if (sk.indexOf(key) >= 0 || key.indexOf(sk) >= 0) { schedInfo = schedMap[sk].day || ''; break; } }
+                html += '<td style="text-align:center;color:var(--text-muted);font-size:0.8rem;white-space:nowrap;">NOT RUN' + (schedInfo ? '<br><span style="font-size:0.65rem;">Next: ' + esc(schedInfo) + '</span>' : '') + '</td>';
                 html += '<td colspan="5"></td>';
                 html += '<td style="text-align:center;">' + triggerBtn + '</td>';
                 html += '</tr>';
@@ -3395,8 +3924,9 @@
             container.innerHTML = html;
         }
 
-        async function fbcTriggerJob(jobName, fbcSha, btn) {
-            if (!confirm('Trigger ' + jobName.split('-e2e-')[1] + ' pinned to FBC ' + fbcSha.slice(0,8) + '?')) return;
+        async function fbcTriggerJob(jobName, fbcSha, btn, snapshotName) {
+            var pinLabel = snapshotName || fbcSha.slice(0,8);
+            if (!confirm('Trigger ' + jobName.split('-e2e-')[1] + ' pinned to ' + pinLabel + '?')) return;
             btn.disabled = true;
             btn.textContent = '...';
             try {
