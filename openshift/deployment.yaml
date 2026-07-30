@@ -28,7 +28,7 @@ spec:
           valueFrom:
             secretKeyRef:
               name: gangway-token
-              key: token
+              key: PROW_GANGWAY_TOKEN
         - name: KONFLUX_TOKEN
           valueFrom:
             secretKeyRef:
