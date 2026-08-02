@@ -1908,13 +1908,14 @@
                     (tabName === 'fbc-validation' && btn.textContent.trim() === 'FBC Summary') ||
                     (tabName === 'presubmit' && btn.textContent.trim() === 'Presubmit') ||
                     (tabName === 'weekly-report' && btn.textContent.trim() === 'Weekly Report') ||
+                    (tabName === 'regressions' && btn.textContent.trim() === 'Regressions') ||
                     (tabName === 'pipeline' && btn.textContent.trim() === 'Pipeline')) {
                     btn.classList.add('active');
                     btn.setAttribute('aria-selected', 'true');
                 }
             });
             var sharedFilters = document.getElementById('sharedFilters');
-            if (sharedFilters) sharedFilters.style.display = (tabName === 'weekly-report' || tabName === 'pipeline') ? 'none' : 'flex';
+            if (sharedFilters) sharedFilters.style.display = (tabName === 'weekly-report' || tabName === 'pipeline' || tabName === 'regressions') ? 'none' : 'flex';
             if (tabName === 'pipeline' && typeof drawPipeArrows === 'function') {
                 setTimeout(drawPipeArrows, 50);
             }
@@ -1923,6 +1924,7 @@
             if (tabName === 'job-runs') { loadJobRuns(); loadTriggerButtons(); loadRecentTriggers(); }
             if (tabName === 'fbc-validation') loadFbcValidation();
             if (tabName === 'presubmit') loadPresubmitResults();
+            if (tabName === 'regressions') loadRegressions();
         }
 
         async function fetchData(endpoint, params = {}) {
