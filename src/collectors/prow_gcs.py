@@ -774,12 +774,14 @@ class ProwGCSCollector(BaseCollector):
             artifact_base = self._artifact_base(job_run)
 
             if artifact_base:
-                e2e_url = f"{artifact_base}/e2e-test/"
-                junit_files = self._find_junit_files(e2e_url, max_depth=3)
-                for junit_url in junit_files:
-                    tests = self._parse_junit_xml(junit_url, job_run, test_names)
-                    results.extend(tests)
-                return results
+                for step_dir in ('e2e-test', 'e2e-upgrade-test'):
+                    e2e_url = f"{artifact_base}/{step_dir}/"
+                    junit_files = self._find_junit_files(e2e_url, max_depth=3)
+                    for junit_url in junit_files:
+                        tests = self._parse_junit_xml(junit_url, job_run, test_names)
+                        results.extend(tests)
+                if results:
+                    return results
 
             # Fallback: broad search (for non-medik8s jobs or unknown layout)
             if job_run.gcs_prefix:
