@@ -681,7 +681,6 @@
             background: #6b7280;
         }
         .op-chip--far { background: #2563eb; }
-        .op-chip--farnhc { background: #7c3aed; width: auto; min-width: 42px; }
         .op-chip--sbr { background: #f97316; }
         .op-chip--snr { background: #22c55e; }
         .op-chip--nhc { background: #a855f7; }
@@ -3550,8 +3549,7 @@
         // ---- Operator colors ----
         const OP_COLORS = {
             FAR: '#2563eb', SBR: '#f97316', SNR: '#22c55e',
-            NHC: '#a855f7', MDR: '#eab308', NMO: '#06b6d4',
-            'FAR+NHC': '#7c3aed'
+            NHC: '#a855f7', MDR: '#eab308', NMO: '#06b6d4'
         };
         function filterTableRows(containerId, query) {
             var container = document.getElementById(containerId);
@@ -3565,10 +3563,6 @@
 
         function opChip(op) {
             if (!op) return '';
-            var color = OP_COLORS[op];
-            if (color) {
-                return '<span class="op-chip" style="background:' + color + '22;color:' + color + ';border-color:' + color + '55;">' + esc(op) + '</span>';
-            }
             var safeClass = op.toLowerCase().replace(/[^a-z0-9-]/g, '');
             return '<span class="op-chip op-chip--' + safeClass + '">' + esc(op) + '</span>';
         }

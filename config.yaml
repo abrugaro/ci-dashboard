@@ -18,8 +18,8 @@ collector:
     # Periodic job schedules (from Prow configs in openshift/release)
     job_schedules:
       far-nhc-interop-weekly-aws:
-        label: FAR+NHC
-        variant: interop
+        label: FAR
+        variant: "interop (NHC)"
         day: "Tue 04:00 UTC"
       sbr-weekly-aws-efs:
         label: SBR
