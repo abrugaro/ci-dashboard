@@ -3825,7 +3825,7 @@
                             ? ' title="' + esc(failCat || failReason) + '"' : '';
                         var isInfraFail = lastStatus === 'failed' && (!run.failed_tests || run.failed_tests === 0);
                         var infraTag = isInfraFail
-                            ? ' <span style="color:var(--text-muted);font-size:0.85em;" title="' + esc(failCat || failReason || 'Job failed before tests ran') + '">(infra)</span>'
+                            ? ' ' + failureBadge('infra', '', failCat || failReason || 'Job failed before tests ran')
                             : '';
                         if (isInfraFail) rateColor = 'var(--text-muted)';
 
@@ -4103,7 +4103,8 @@
                         row.onclick = function() { document.getElementById(rid).classList.toggle('open'); };
                         var statusCls = r.status === 'passed' ? 'result-pass' : 'result-fail';
                         var jobOp = deriveOperator(r.step_name || r.job_name || '');
-                        var failInfo = r.status === 'failed' ? failureBadge(r.failure_category, r.failed_step, r.failure_reason) : '';
+                        var effectiveCat = (r.status === 'failed' && (!r.failed_tests || r.failed_tests === 0)) ? 'infra' : r.failure_category;
+                        var failInfo = r.status === 'failed' ? failureBadge(effectiveCat, r.failed_step, r.failure_reason) : '';
                         row.innerHTML = '<td style="text-align:center;color:var(--text-muted);"><span class="expand-arrow">&#9654;</span></td>'
                             + '<td style="font-size:0.8rem;">' + opChip(jobOp) + ' ' + esc((r.job_name || '').replace(/^periodic-ci-medik8s-system-tests-main-/, '')) + '</td>'
                             + '<td><span class="' + statusCls + '">' + esc((r.status || '').toUpperCase()) + '</span></td>'
