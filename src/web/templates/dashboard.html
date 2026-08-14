@@ -3823,7 +3823,7 @@
                         var failCat = (run && run.failure_category) ? run.failure_category.replace(/_/g, ' ') : '';
                         var failHint = (lastStatus === 'failed' && (failReason || failCat))
                             ? ' title="' + esc(failCat || failReason) + '"' : '';
-                        var isInfraFail = lastStatus === 'failed' && !run.total_tests;
+                        var isInfraFail = lastStatus === 'failed' && (!run.failed_tests || run.failed_tests === 0);
                         var infraTag = isInfraFail
                             ? ' <span style="color:var(--text-muted);font-size:0.85em;" title="' + esc(failCat || failReason || 'Job failed before tests ran') + '">(infra)</span>'
                             : '';
