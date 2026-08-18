@@ -1158,28 +1158,31 @@
 
         <!-- Operator Health Tab -->
         <div id="operator-health-tab" class="tab-content">
-            <div class="controls">
-                <label for="historyWeeks">Period:</label>
-                <select id="historyWeeks" onchange="refreshOperatorHealth()">
-                    <option value="4">Last 4 weeks</option>
-                    <option value="8" selected>Last 8 weeks</option>
-                    <option value="12">Last 12 weeks</option>
-                </select>
-
-                <label for="reportVersion">Version:</label>
-                <select id="reportVersion" onchange="refreshOperatorHealth()">
-                    <option value="">All Versions</option>
-                </select>
-            </div>
-
-            <div class="op-filter-bar" id="healthOpFilters" style="margin:8px 0 4px;">
-                <button class="op-filter-chip active" onclick="setHealthOpFilter(null, this)">All</button>
-                <button class="op-filter-chip" style="border-color:#2563eb;" onclick="setHealthOpFilter('FAR', this)">FAR</button>
-                <button class="op-filter-chip" style="border-color:#f97316;" onclick="setHealthOpFilter('SBR', this)">SBR</button>
-                <button class="op-filter-chip" style="border-color:#22c55e;" onclick="setHealthOpFilter('SNR', this)">SNR</button>
-                <button class="op-filter-chip" style="border-color:#a855f7;" onclick="setHealthOpFilter('NHC', this)">NHC</button>
-                <button class="op-filter-chip" style="border-color:#eab308;" onclick="setHealthOpFilter('MDR', this)">MDR</button>
-                <button class="op-filter-chip" style="border-color:#06b6d4;" onclick="setHealthOpFilter('NMO', this)">NMO</button>
+            <div class="controls" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <label for="historyWeeks">Period:</label>
+                    <select id="historyWeeks" onchange="refreshOperatorHealth()">
+                        <option value="4">Last 4 weeks</option>
+                        <option value="8" selected>Last 8 weeks</option>
+                        <option value="12">Last 12 weeks</option>
+                    </select>
+                    <label for="reportVersion">Version:</label>
+                    <select id="reportVersion" onchange="refreshOperatorHealth()">
+                        <option value="">All Versions</option>
+                    </select>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <label>Operator:</label>
+                    <div class="op-filter-bar" id="healthOpFilters">
+                        <button class="op-filter-chip active" onclick="setHealthOpFilter(null, this)">All</button>
+                        <button class="op-filter-chip" style="border-color:#2563eb;" onclick="setHealthOpFilter('FAR', this)">FAR</button>
+                        <button class="op-filter-chip" style="border-color:#f97316;" onclick="setHealthOpFilter('SBR', this)">SBR</button>
+                        <button class="op-filter-chip" style="border-color:#22c55e;" onclick="setHealthOpFilter('SNR', this)">SNR</button>
+                        <button class="op-filter-chip" style="border-color:#a855f7;" onclick="setHealthOpFilter('NHC', this)">NHC</button>
+                        <button class="op-filter-chip" style="border-color:#eab308;" onclick="setHealthOpFilter('MDR', this)">MDR</button>
+                        <button class="op-filter-chip" style="border-color:#06b6d4;" onclick="setHealthOpFilter('NMO', this)">NMO</button>
+                    </div>
+                </div>
             </div>
             <div style="font-size:12px;color:var(--text-muted);margin:4px 0 12px;">
                 Showing data from the last <span id="healthWeeksLabel">8</span> weeks. Each dot in the sparkline represents one weekly job run.
