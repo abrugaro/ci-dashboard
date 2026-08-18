@@ -521,6 +521,22 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.4);
         }
 
+        .health-card {
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .health-card .health-failed-list {
+            max-width: 100%;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
         .modal {
             display: none;
             position: fixed;
@@ -1143,7 +1159,7 @@
         <!-- Operator Health Tab -->
         <div id="operator-health-tab" class="tab-content">
             <div class="controls">
-                <label for="historyWeeks">History:</label>
+                <label for="historyWeeks">Period:</label>
                 <select id="historyWeeks" onchange="refreshOperatorHealth()">
                     <option value="4">Last 4 weeks</option>
                     <option value="8" selected>Last 8 weeks</option>
@@ -1154,20 +1170,22 @@
                 <select id="reportVersion" onchange="refreshOperatorHealth()">
                     <option value="">All Versions</option>
                 </select>
-
-                <label for="reportOperator">Operator:</label>
-                <select id="reportOperator" onchange="refreshOperatorHealth()">
-                    <option value="">All Operators</option>
-                    <option value="FAR">FAR</option>
-                    <option value="SBR">SBR</option>
-                    <option value="SNR">SNR</option>
-                    <option value="NHC">NHC</option>
-                    <option value="MDR">MDR</option>
-                    <option value="NMO">NMO</option>
-                </select>
             </div>
 
-            <div id="operatorHealthCards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px;margin-top:4px;">
+            <div class="op-filter-bar" id="healthOpFilters" style="margin:8px 0 4px;">
+                <button class="op-filter-chip active" onclick="setHealthOpFilter(null, this)">All</button>
+                <button class="op-filter-chip" style="border-color:#2563eb;" onclick="setHealthOpFilter('FAR', this)">FAR</button>
+                <button class="op-filter-chip" style="border-color:#f97316;" onclick="setHealthOpFilter('SBR', this)">SBR</button>
+                <button class="op-filter-chip" style="border-color:#22c55e;" onclick="setHealthOpFilter('SNR', this)">SNR</button>
+                <button class="op-filter-chip" style="border-color:#a855f7;" onclick="setHealthOpFilter('NHC', this)">NHC</button>
+                <button class="op-filter-chip" style="border-color:#eab308;" onclick="setHealthOpFilter('MDR', this)">MDR</button>
+                <button class="op-filter-chip" style="border-color:#06b6d4;" onclick="setHealthOpFilter('NMO', this)">NMO</button>
+            </div>
+            <div style="font-size:12px;color:var(--text-muted);margin:4px 0 12px;">
+                Showing data from the last <span id="healthWeeksLabel">8</span> weeks. Each dot in the sparkline represents one weekly job run.
+            </div>
+
+            <div id="operatorHealthCards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px;">
                 <div style="text-align:center;padding:40px;color:var(--text-muted);grid-column:1/-1;">Loading...</div>
             </div>
         </div>
@@ -1953,10 +1971,9 @@
             if (tabName === 'fbc-summary' && snapshot) hash += '/' + encodeURIComponent(snapshot);
             if (tabName === 'operator-health') {
                 var wEl = document.getElementById('historyWeeks');
-                var oEl = document.getElementById('reportOperator');
                 var qs = [];
                 if (wEl && wEl.value) qs.push('weeks=' + encodeURIComponent(wEl.value));
-                if (oEl && oEl.value) qs.push('operator=' + encodeURIComponent(oEl.value));
+                if (healthOpFilter) qs.push('operator=' + encodeURIComponent(healthOpFilter));
                 if (qs.length) hash += '?' + qs.join('&');
             }
             if (location.hash !== hash) {
@@ -3088,10 +3105,21 @@
             }
         }
 
+        let healthOpFilter = null;
+
+        function setHealthOpFilter(op, btn) {
+            healthOpFilter = op;
+            document.querySelectorAll('#healthOpFilters .op-filter-chip').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            refreshOperatorHealth();
+        }
+
         async function refreshOperatorHealth() {
             const weeks = document.getElementById('historyWeeks').value;
             const version = document.getElementById('reportVersion').value;
-            const operator = document.getElementById('reportOperator').value;
+            const operator = healthOpFilter || '';
+            const wLabel = document.getElementById('healthWeeksLabel');
+            if (wLabel) wLabel.textContent = weeks;
             const data = await fetchData('operator-health', {
                 history_weeks: weeks, version: version, operator: operator
             });
@@ -3134,10 +3162,10 @@
                 }).join(' ');
                 const ft = latest ? (latest.failed_tests || []) : [];
                 const ftHtml = ft.length
-                    ? '<ul style="margin:8px 0 0;padding-left:16px;font-size:12px;color:var(--accent-red);line-height:1.6;">'
+                    ? '<div class="health-failed-list"><ul style="margin:8px 0 0;padding-left:16px;font-size:12px;color:var(--accent-red);line-height:1.6;">'
                         + ft.slice(0, 3).map(t => `<li>${esc(t)}</li>`).join('')
                         + (ft.length > 3 ? `<li style="color:var(--text-muted);">+${ft.length - 3} more</li>` : '')
-                        + '</ul>'
+                        + '</ul></div>'
                     : '';
                 let latestLine;
                 if (latest) {
@@ -3148,14 +3176,14 @@
                 } else {
                     latestLine = `No runs in last ${data.history_weeks} weeks`;
                 }
-                return `<div class="platform-card" style="border-left:4px solid ${opColor};cursor:default;">
+                return `<div class="health-card" style="border-left:4px solid ${opColor};">
                   <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
                     <span class="platform-name" style="color:${opColor};">${esc(opName)}</span>
                     <span class="status-badge ${BADGE[d.status] || 'status-neutral'}">${LABEL[d.status] || esc(d.status)}</span>
                   </div>
                   <div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px;">${latestLine}</div>
                   ${ftHtml}
-                  <div style="margin-top:10px;font-size:16px;letter-spacing:6px;">${spark}</div>
+                  <div style="margin-top:10px;font-size:16px;letter-spacing:4px;">${spark}</div>
                 </div>`;
             }).join('');
         }
@@ -4620,14 +4648,17 @@
             // Operator Health tab: apply hash params (weeks + operator) on navigation.
             if (parsed.tab === 'operator-health' && parsed.params) {
                 const wEl = document.getElementById('historyWeeks');
-                const oEl = document.getElementById('reportOperator');
                 if (wEl && parsed.params.weeks) {
                     const v = String(parsed.params.weeks);
                     for (let i = 0; i < wEl.options.length; i++) {
                         if (wEl.options[i].value === v) { wEl.value = v; break; }
                     }
                 }
-                if (oEl) oEl.value = (parsed.params.operator || '').toUpperCase();
+                if (parsed.params.operator) {
+                    const op = parsed.params.operator.toUpperCase();
+                    const chip = document.querySelector(`#healthOpFilters .op-filter-chip[onclick*="'${op}'"]`);
+                    if (chip) setHealthOpFilter(op, chip);
+                }
             }
             showTab(parsed.tab);
         }
